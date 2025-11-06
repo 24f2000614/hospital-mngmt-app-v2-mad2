@@ -1,0 +1,69 @@
+from flask import Blueprint, request, jsonify
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_jwt_extended import create_access_token, create_refresh_token
+from sqlalchemy.exc import IntegrityError
+from models import db, Patient, Doctor, Admin
+from datetime import date
+auth_bp = Blueprint("auth", __name__)
+
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    try:
+        email = request.json.get("email")
+        password = request.json.get("password")
+    except:
+        return jsonify({"message":"Invalid Input"})
+            
+    user = None
+    role = None
+
+    patient = Patient.query.filter(Patient.email == email.lower()).first()
+    if patient:
+        user = patient
+        role = "Patient"
+
+    elif doctor := Doctor.query.filter(Doctor.email == email.lower()).first():
+        user = doctor
+        role = "Doctor"
+
+    elif admin := Admin.query.filter(Admin.email == email.lower()).first():
+        user = admin
+        role = "Admin"
+
+    else:
+        role = "None"
+
+    if user and check_password_hash(user.password, password):
+        additional_claims = {"role": role}
+        access_token = create_access_token(identity=email, additional_claims= additional_claims)
+        return jsonify(
+            {
+                "message": "Logged In!",
+                "tokens": {
+                    "access_token": access_token,
+                    # "refresh_token": refresh_token
+                }
+            }
+        )
+    else:
+        return jsonify({"message":"Incorrect Email or Password"})
+
+@auth_bp.route("/register", methods=["POST"])
+def register():
+    data = request.json
+    email=data['email'].lower()
+    name=data['name']
+    sex=data['sex']
+    password=data['password']
+    phone_no=data['phoneNum']
+    dob=list(map(int, data['dob'].split('-')))
+    dob=date(dob[0], dob[1], dob[2])
+
+    try:
+        new_user=Patient(email=email,password=generate_password_hash(password),phone_no=phone_no,name=name, dob=dob, sex=sex)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify("Success")
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify("Error")

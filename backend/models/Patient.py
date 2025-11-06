@@ -5,6 +5,8 @@ class Patient(db.Model):
     p_id=db.Column(db.Integer, primary_key=True, autoincrement=True)
     name=db.Column(db.String, nullable=False)
     email=db.Column(db.String, nullable=False, unique=True)
+    sex=db.Column(db.String, nullable=False)
     password=db.Column(db.String,nullable=False)
+    dob=db.Column(db.Date,nullable=False)
     phone_no=db.Column(db.Integer, nullable=False, unique=True)
     address=db.Column(db.String, nullable=True)

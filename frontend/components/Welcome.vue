@@ -18,7 +18,7 @@ h1 {
   font-weight: 1000;
   font-size: 5rem;
   position: relative;
-  /* top: -10px; */
+  margin-bottom: 0;
 }
 
 .greetings h1,
@@ -26,7 +26,7 @@ h1 {
   text-align: center;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1024px ) {
   .greetings h1,
   .greetings h3 {
     text-align: left;

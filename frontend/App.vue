@@ -1,5 +1,4 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
 import Welcome from './components/Welcome.vue'
 </script>
 
@@ -33,7 +32,7 @@ nav {
   width: 100%;
   font-size: 12px;
   text-align: center;
-  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 
@@ -74,7 +73,9 @@ nav a:first-of-type {
     font-size: 1rem;
 
     padding: 1rem 0;
-    margin-top: 1rem;
+    margin-top: 0rem;
   }
 }
 </style>
+
+@media (min-width: 1024px) {

@@ -1,17 +1,30 @@
 from flask import Flask
 from werkzeug.security import generate_password_hash, check_password_hash
+from routes import auth_bp, admin_bp
+from flask_jwt_extended import JWTManager
+from models import db, Admin, Patient, Doctor, Department
+from flask_cors import CORS
+from datetime import timedelta
 
-from models import db, Admin, Patient, Doctor
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Lhospital.sqlite3"
+app.config['JWT_SECRET_KEY'] = "BuffaloWings"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=15)
+jwt = JWTManager(app)
+
 db.init_app(app)
+CORS(app, origins=["http://localhost:5173"])
+
+app.register_blueprint(auth_bp)
+app.register_blueprint(admin_bp)
 
 def create_admin():
     admin = (db.session.query(Admin).all())
     if not admin:
+
         admin = Admin(
-            email="admin@L'Hospital",
+            email="admin@lhospital",
             password=generate_password_hash("admin123"),
         )
         db.session.add(admin)
@@ -20,9 +33,36 @@ def create_admin():
     else:
         print("Admin user already exists.")
 
+def create_dept():
+    dept = (db.session.query(Department).all())
+    if not dept:
+        dept1 = Department(
+            name="Cardiology",
+            description="Get your hearts fixed here",
+        )
+        
+        dept2 = Department(
+            name="Pediatrics",
+            description="Get your kids fixed here",
+        )
+        
+        dept3 = Department(
+            name="Opthalamology",
+            description="Get your eyes fixed here",
+        )
+
+        db.session.add(dept1)
+        db.session.add(dept2)
+        db.session.add(dept3)
+        db.session.commit()
+        print("Departments created successfully.")
+    else:
+        print("Departments already exists.")
+
 with app.app_context():
     db.create_all()
     create_admin()
+    create_dept()
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
