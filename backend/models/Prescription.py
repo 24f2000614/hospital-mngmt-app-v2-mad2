@@ -5,3 +5,4 @@ class Prescription(db.Model):
     pr_id=db.Column(db.Integer, primary_key=True,nullable=False)
     a_id=db.Column(db.Integer, db.ForeignKey("Appointments.a_id"),nullable=False)
     medicine= db.Column(db.String, nullable=False)
+    appointment = db.relationship('Appointment', back_populates='prescriptions')

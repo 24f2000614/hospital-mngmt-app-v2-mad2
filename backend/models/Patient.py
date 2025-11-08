@@ -10,3 +10,9 @@ class Patient(db.Model):
     dob=db.Column(db.Date,nullable=False)
     phone_no=db.Column(db.Integer, nullable=False, unique=True)
     address=db.Column(db.String, nullable=True)
+
+    appointments = db.relationship(
+        'Appointment',
+        back_populates='patient',
+        cascade='all, delete-orphan'
+    )

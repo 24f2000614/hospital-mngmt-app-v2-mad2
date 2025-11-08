@@ -5,3 +5,4 @@ from .Doctor import Doctor
 from .Appointment import Appointment
 from .Prescription import Prescription
 from .Dept import Department
+from .Blacklist import Blacklist

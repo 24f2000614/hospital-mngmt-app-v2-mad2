@@ -10,14 +10,14 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Lhospital.sqlite3"
 app.config['JWT_SECRET_KEY'] = "BuffaloWings"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=15)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=50)
 jwt = JWTManager(app)
 
 db.init_app(app)
 CORS(app, origins=["http://localhost:5173"])
 
 app.register_blueprint(auth_bp)
-app.register_blueprint(admin_bp)
+app.register_blueprint(admin_bp, url_prefix='/admin')
 
 def create_admin():
     admin = (db.session.query(Admin).all())

@@ -6,5 +6,5 @@ class Doctor(db.Model):
     name=db.Column(db.String, nullable=False)
     email=db.Column(db.String, nullable=False, unique=True)
     password=db.Column(db.String,nullable=False)
-    description=db.Column(db.String, nullable=True, unique=True)
+    description=db.Column(db.String, nullable=True, unique=False)
     dept_id=db.Column(db.Integer,db.ForeignKey("Departments.dept_id"),nullable=False)

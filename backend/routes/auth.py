@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, create_refresh_token
 from sqlalchemy.exc import IntegrityError
-from models import db, Patient, Doctor, Admin
+from models import db, Patient, Doctor, Admin, Blacklist
 from datetime import date
 auth_bp = Blueprint("auth", __name__)
 
@@ -14,6 +14,9 @@ def login():
     except:
         return jsonify({"message":"Invalid Input"})
             
+    if db.session.get(Blacklist, email):
+        return "This email is blacklisted"
+
     user = None
     role = None
 
@@ -41,7 +44,6 @@ def login():
                 "message": "Logged In!",
                 "tokens": {
                     "access_token": access_token,
-                    # "refresh_token": refresh_token
                 }
             }
         )
@@ -59,11 +61,14 @@ def register():
     dob=list(map(int, data['dob'].split('-')))
     dob=date(dob[0], dob[1], dob[2])
 
+    if db.session.get(Blacklist, email):
+        return "This email is blacklisted"
+
     try:
         new_user=Patient(email=email,password=generate_password_hash(password),phone_no=phone_no,name=name, dob=dob, sex=sex)
         db.session.add(new_user)
         db.session.commit()
         return jsonify("Success")
-    except IntegrityError:
+    except IntegrityError as IE:
         db.session.rollback()
-        return jsonify("Error")
+        return IE
