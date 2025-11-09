@@ -4,6 +4,7 @@ from models import db, Appointment
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
 from .Prescription import Prescription_Apis
+from datetime import datetime, timedelta
 
 appointment_fields = {
     "a_id": fields.Integer,
@@ -16,24 +17,35 @@ appointment_fields = {
 }
 
 class Appointment_Apis(Resource):
-    def get(self, a_id=None):
-        if not a_id:
+    def get(self, a_id=None, p_id = None, d_id=None):
+        if not a_id and not p_id and not d_id:
             appointments = Appointment.query.all()
             return jsonify([marshal(appointment, appointment_fields) for appointment in appointments])
-        else:
+        elif a_id and not p_id and not d_id:
             appointment = db.session.get(Appointment, a_id)
             return jsonify(marshal(appointment, appointment_fields))
-        
+        elif not a_id and p_id and not d_id:
+            appointments = Appointment.query.filter(Appointment.p_id == p_id).all()
+            return [marshal(appointment, appointment_fields) for appointment in appointments]
+        elif not a_id and not p_id and d_id:
+            appointments = Appointment.query.filter(Appointment.d_id == d_id).all()
+            return [marshal(appointment, appointment_fields) for appointment in appointments]
+        elif a_id and p_id and not d_id:
+            appointments = Appointment.query.filter(Appointment.p_id == p_id, Appointment.a_id == a_id).all()
+            return [marshal(appointment, appointment_fields) for appointment in appointments]
+        else:
+            return "Invalid params"
+             
     def post(self, data):
         p_id= data["p_id"]
         d_id= data["d_id"]
-        start_time= data["start"]
-        end_time= data["end"]
+        start_time= datetime.fromisoformat(data["start"].replace("Z", "+00:00"))
+        end_time = start_time + timedelta(minutes = data["end"])
         status= data["status"]
-        prescription= data["pr_id"]
+        prescription= data.get('pr_id')
 
         try:
-            new_appoint = Appointment(p_id=p_id,d_id=d_id,start_time=start_time,end_time=end_time,status=status,prescription=prescription)
+            new_appoint = Appointment(p_id=p_id,d_id=d_id,start_time=start_time,end_time=end_time,status=status,pr_id=prescription)
             db.session.add(new_appoint)
             db.session.commit()
             return "Success"
@@ -41,13 +53,16 @@ class Appointment_Apis(Resource):
             db.session.rollback()
             return "Integrity Error"
 
-    def reschedule(self, new_start, a_id):
+    def reschedule(self, new_start, duration, a_id):
         try:
             appointment = db.session.get(Appointment, a_id)
-            if appointment.status == "Scheduled":
+            new_start = datetime.fromisoformat(new_start.replace("Z", "+00:00"))
+            if appointment.status == "Booked":
                 appointment.start_time = new_start
+                appointment.end_time = new_start + timedelta(minutes=duration)
                 db.session.commit()
-                return "Success"
+                rescheduled = marshal(db.session.get(Appointment, a_id), appointment_fields)
+                return jsonify({"message": "Success", "rescheduled": rescheduled })
             else:
                 return "Cannot edit time of this appointment"
         except IntegrityError:

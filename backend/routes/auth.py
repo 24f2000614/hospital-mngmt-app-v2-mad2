@@ -18,19 +18,23 @@ def login():
         return "This email is blacklisted"
 
     user = None
+    id = None
     role = None
 
     patient = Patient.query.filter(Patient.email == email.lower()).first()
     if patient:
         user = patient
+        id = patient.p_id
         role = "Patient"
 
     elif doctor := Doctor.query.filter(Doctor.email == email.lower()).first():
         user = doctor
+        id = doctor.d_id
         role = "Doctor"
 
     elif admin := Admin.query.filter(Admin.email == email.lower()).first():
         user = admin
+        id = admin.a_id
         role = "Admin"
 
     else:
@@ -38,7 +42,7 @@ def login():
 
     if user and check_password_hash(user.password, password):
         additional_claims = {"role": role}
-        access_token = create_access_token(identity=email, additional_claims= additional_claims)
+        access_token = create_access_token(identity=str(id), additional_claims= additional_claims)
         return jsonify(
             {
                 "message": "Logged In!",

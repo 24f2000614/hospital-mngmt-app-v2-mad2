@@ -54,3 +54,15 @@ class Patient_Apis(Resource):
         else:
             search_by_name = Patient.query.filter(Patient.name.ilike(f"%{searchQ}%")).limit(5).all()
             return [marshal(search_item, patient_fields) for search_item in search_by_name]
+
+    def put(self, changes, p_id):
+        try:
+            patient = db.session.get(p_id)
+            for key, value in changes.items():
+                if hasattr(patient, key) and "id" not in key:
+                    setattr(patient, key, value)
+            db.session.commit()
+            return "Success"
+        except Error as e:
+            db.session.rollback()
+            return jsonify({"Error":e})

@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
-from api import Patient_Apis, Doctor_Apis, Appointment_Apis
+from api import Patient_Apis, Doctor_Apis, Appointment_Apis, Department_Apis
 
 admin_bp = Blueprint("admin",__name__)
 
@@ -58,19 +58,42 @@ def appointment_handler(a_id=None):
     else:
         return jsonify({"message": "You are not authorized to access this route"})
 
-@admin_bp.route("/search/<usr_type>", methods=['GET'])
+@admin_bp.route("/search/<srch_type>", methods=['GET'])
 @jwt_required()
-def search_handler(usr_type):
+def search_handler(srch_type):
     claims= get_jwt()
     if claims["role"] == "Admin":
-        if usr_type in ["doctors", "patients"]:
+        if srch_type in ["doctors", "patients", "departments"]:
             searchQ = request.json.get("searchQ")
-            if usr_type == "doctors":
+            if srch_type == "doctors":
                 results = Doctor_Apis().search(searchQ)
-            else:
+            elif srch_type == "patients":
                 results = Patient_Apis().search(searchQ)
-
+            elif srch_type == "departments":
+                results = Department_Apis().search(searchQ)
         else:
             return "Not a valid search"
     else:
         return jsonify({"message": "You are not authorized to access this route"})
+
+@admin_bp.route("/dept", methods=['GET', 'POST'])
+@admin_bp.route("/dept/<int:dept_id>", methods=['GET', 'PUT'])
+@jwt_required()
+def department_handler(dept_id = None):
+    claims = get_jwt()
+    if claims['role'] != "Admin":
+        return "You are not authorized to access this route"
+    
+    if request.method == 'GET':
+        dept = Department_Apis().get(dept_id)
+        return dept
+    elif request.method == 'POST':
+        data = request.json
+        result = Department_Apis().post(data)
+        return result
+    elif request.method == 'PUT':
+        changes = request.json
+        result = Department_Apis().put(changes, dept_id)
+        return result
+
+    

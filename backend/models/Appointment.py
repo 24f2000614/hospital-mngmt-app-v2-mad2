@@ -8,11 +8,11 @@ class Appointment(db.Model):
     start_time=db.Column(db.DateTime, nullable=False)
     end_time=db.Column(db.DateTime, nullable=True)
     status=db.Column(db.String, nullable=False)
-    prescription_id=db.Column(db.Integer, db.ForeignKey("Prescription.pr_id"), nullable=True)
+    pr_id=db.Column(db.Integer, nullable=True)
 
     prescriptions = db.relationship(
         'Prescription',
         back_populates='appointment',
-        cascade='all, delete-orphan'  # ✅ auto-delete linked prescriptions
+        cascade='all, delete-orphan' 
     )
     patient = db.relationship('Patient', back_populates='appointments')

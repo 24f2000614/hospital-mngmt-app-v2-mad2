@@ -26,24 +26,24 @@ class Doctor_Apis(Resource):
             data = marshal(item, doctor_fields)
             return jsonify(data)
         elif dept_id:
-            items = Doctor.query.filter(Doctor.dept_id = dept_id).all()
+            items = Doctor.query.filter(Doctor.dept_id == dept_id).all()
             data = [marshal(item, doctor_fields) for item in items]
             return jsonify(data)
 
     def post(self, data):
-        name=data.get("name")
-        email=data.get("email")
-        password="doctor123"
-        description=data.get("description")
-        dept_id=int(data.get("dept_id"))
         try:
+            name=data.get("name")
+            email=data.get("email")
+            password="doctor123"
+            description=data.get("description")
+            dept_id=int(data.get("dept_id"))
             new_doc=Doctor(email=email,password=generate_password_hash(password),name=name, dept_id=dept_id, description=description)
             db.session.add(new_doc)
             db.session.commit()
             return "Success"
-        except IntegrityError:
+        except Error as e:
             db.session.rollback()
-            return "Integrity Error"
+            return jsonify({"Error":e})
     
     def put(self, changes, d_id):
         try:
@@ -51,13 +51,13 @@ class Doctor_Apis(Resource):
             if not doctor:
                 return {"message": "Doctor not found"}, 404
             for key, value in changes.items():
-                if hasattr(doctor, key):
+                if hasattr(doctor, key) and "id" not in key:
                     setattr(doctor, key, value)
             db.session.commit()
             return "Success"
-        except IntegrityError:
+        except Error as e:
             db.session.rollback()
-            return "Integrity Error"
+            return jsonify({"Error":e})
 
     def delete(self,d_id):
         try:
@@ -72,6 +72,10 @@ class Doctor_Apis(Resource):
         except IntegrityError:
             return "Integrity Error"
     
-    def search(self, searchQ):
-        search_by_name = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%")).limit(5).all()
-        return [marshal(search_item, doctor_fields) for search_item in search_by_name]
+    def search(self, searchQ, d_id= None):
+        if not d_id:
+            results = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%")).limit(5).all()
+        else:
+            results = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%"), Doctor.dept_id == d_id).limit(5).all()
+
+        return [marshal(search_item, doctor_fields) for search_item in results]

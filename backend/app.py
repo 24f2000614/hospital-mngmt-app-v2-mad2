@@ -1,11 +1,10 @@
 from flask import Flask
 from werkzeug.security import generate_password_hash, check_password_hash
-from routes import auth_bp, admin_bp
+from routes import auth_bp, admin_bp, patient_bp
 from flask_jwt_extended import JWTManager
 from models import db, Admin, Patient, Doctor, Department
 from flask_cors import CORS
 from datetime import timedelta
-
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Lhospital.sqlite3"
@@ -18,6 +17,7 @@ CORS(app, origins=["http://localhost:5173"])
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(patient_bp, url_prefix='/patient')
 
 def create_admin():
     admin = (db.session.query(Admin).all())
