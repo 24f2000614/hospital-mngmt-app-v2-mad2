@@ -1,6 +1,7 @@
 from flask import jsonify
 from flask_restful import Resource, fields, marshal
 from models import Patient, Blacklist
+from .Appointment import Appointment_Apis, Prescription_Apis
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 
@@ -54,6 +55,16 @@ class Patient_Apis(Resource):
         else:
             search_by_name = Patient.query.filter(Patient.name.ilike(f"%{searchQ}%")).limit(5).all()
             return [marshal(search_item, patient_fields) for search_item in search_by_name]
+
+    def history(self, p_id):
+        history = {}
+        appointments = Appointment_Apis().get(p_id=p_id)
+        for appointment in appointments:
+            history[appointment.a_id] = {
+                "appointment": appointment,
+                "prescriptions": Prescription_Apis().get(appointment.a_id)
+            }
+        return history
 
     def put(self, changes, p_id):
         try:

@@ -10,8 +10,9 @@ admin_bp = Blueprint("admin",__name__)
 def patient_handler(p_id=None):
     claims=get_jwt()
     if claims['role'] == "Admin":
-        data = Patients().get(p_id)
-        return data
+        data = Patient_Apis().get(p_id)
+        history = Patient_Apis().history(p_id)
+        return data, history
     return jsonify({"message": "You are not authorized to access this route"})
 
 @admin_bp.route("/doctors", methods=['GET','POST'])
@@ -47,7 +48,7 @@ def appointment_handler(a_id=None):
     if claims["role"] == "Admin":
         if request.method == "GET":
             if a_id:
-                appointment = Appointment_Apis().get(a_id)
+                appointment = Appointment_Apis().get(a_id=a_id)
                 return appointment
             else:
                 appointments = Appointment_Apis().get()

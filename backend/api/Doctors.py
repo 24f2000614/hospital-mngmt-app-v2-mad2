@@ -71,7 +71,7 @@ class Doctor_Apis(Resource):
             return "Success"
         except IntegrityError:
             return "Integrity Error"
-    
+
     def search(self, searchQ, d_id= None):
         if not d_id:
             results = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%")).limit(5).all()

@@ -6,3 +6,4 @@ from .Appointment import Appointment
 from .Prescription import Prescription
 from .Dept import Department
 from .Blacklist import Blacklist
+from .Holiday import Holiday

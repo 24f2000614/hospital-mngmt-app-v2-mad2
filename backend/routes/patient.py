@@ -34,9 +34,9 @@ def appointment_handler(a_id=None):
             return "You're not authorized to reschedule appointments for this user"
     elif request.method == "DELETE":
         # appointment = db.session.get(Appointment, a_id)
-        appointment = Appointment_Apis().get(a_id)
+        appointment = Appointment_Apis().get(a_id=a_id)
         if appointment.p_id == p_id:
-            result = Appointment_Apis().cancel(a_id=a_id)
+            result = Appointment_Apis().delete(a_id=a_id)
             return result
         else:
             return "You're not authorized to cancel appointments for this user"

@@ -9,6 +9,7 @@ class Appointment(db.Model):
     end_time=db.Column(db.DateTime, nullable=True)
     status=db.Column(db.String, nullable=False)
     pr_id=db.Column(db.Integer, nullable=True)
+    diagnosis=db.Column(db.String, nullable=True)
 
     prescriptions = db.relationship(
         'Prescription',

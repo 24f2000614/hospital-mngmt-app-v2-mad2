@@ -4,6 +4,7 @@ from models import db, Appointment
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
 from .Prescription import Prescription_Apis
+from .Holiday import Holiday_Apis
 from datetime import datetime, timedelta
 
 appointment_fields = {
@@ -37,12 +38,17 @@ class Appointment_Apis(Resource):
             return "Invalid params"
              
     def post(self, data):
-        p_id= data["p_id"]
-        d_id= data["d_id"]
-        start_time= datetime.fromisoformat(data["start"].replace("Z", "+00:00"))
+        p_id= data.get("p_id")
+        d_id= data.get("d_id")
+        start_time= datetime.fromisoformat(data["start"])
         end_time = start_time + timedelta(minutes = data["end"])
         status= data["status"]
         prescription= data.get('pr_id')
+
+        Doctors_off = Holiday_Apis().get_for_doctor(d_id)
+        for day in Doctors_off:
+            if start_time.date() == day['date']:
+                return "The doctor is unavailable for this date"
 
         try:
             new_appoint = Appointment(p_id=p_id,d_id=d_id,start_time=start_time,end_time=end_time,status=status,pr_id=prescription)
@@ -56,7 +62,13 @@ class Appointment_Apis(Resource):
     def reschedule(self, new_start, duration, a_id):
         try:
             appointment = db.session.get(Appointment, a_id)
-            new_start = datetime.fromisoformat(new_start.replace("Z", "+00:00"))
+            new_start = datetime.fromisoformat(new_start)
+            
+            Doctors_off = Holiday_Apis().get_for_doctor(d_id)
+            for day in Doctors_off:
+                if start_time.date() == day['date']:
+                    return "The doctor is unavailable for this date"
+            
             if appointment.status == "Booked":
                 appointment.start_time = new_start
                 appointment.end_time = new_start + timedelta(minutes=duration)
@@ -69,14 +81,17 @@ class Appointment_Apis(Resource):
             db.session.rollback()
             return "IntegrityError"
 
-    def cancel(self, a_id=None, d_id=None):
+    def delete(self, a_id=None):
         try:
             if a_id and not d_id:
                 appointment = db.session.get(Appointment,a_id)
                 if appointment is not None:
-                    db.session.delete(appointment)
-                    db.session.commit()
-                    return "Success"
+                    if appointment.status != 'Completed':
+                        db.session.delete(appointment)
+                        db.session.commit()
+                        return "Success"
+                    else:
+                        return "This appointment is completed and cannot be deleted."
                 else:
                     return f"No appointment found with id={a_id}"
             elif d_id and not a_id:
@@ -94,3 +109,15 @@ class Appointment_Apis(Resource):
         except IntegrityError:
             db.session.rollback()
             return "Integrity Error"
+
+    def cancel(self, a_id=None, d_id=None):
+        if a_id and not d_id:
+            appointment = db.session.get(Appointment, a_id)
+            appointment.status = "Cancelled"
+
+    def diagnosis(self, a_id, diagnosis):
+        appointment = db.session.get(a_id)
+        appointment.diagnosis = diagnosis
+        appointment.status = "Completed"
+        db.session.commit()
+        return "Success"

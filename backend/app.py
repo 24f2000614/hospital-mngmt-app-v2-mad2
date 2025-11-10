@@ -1,6 +1,6 @@
 from flask import Flask
 from werkzeug.security import generate_password_hash, check_password_hash
-from routes import auth_bp, admin_bp, patient_bp
+from routes import auth_bp, admin_bp, patient_bp, doctor_bp
 from flask_jwt_extended import JWTManager
 from models import db, Admin, Patient, Doctor, Department
 from flask_cors import CORS
@@ -18,6 +18,7 @@ CORS(app, origins=["http://localhost:5173"])
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(patient_bp, url_prefix='/patient')
+app.register_blueprint(doctor_bp, url_prefix='/doctor')
 
 def create_admin():
     admin = (db.session.query(Admin).all())
