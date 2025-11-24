@@ -33,7 +33,7 @@ class Doctor_Apis(Resource):
     def post(self, data):
         try:
             name=data.get("name")
-            email=data.get("email")
+            email=data.get("email").lower()
             password="doctor123"
             description=data.get("description")
             dept_id=int(data.get("dept_id"))
@@ -41,9 +41,9 @@ class Doctor_Apis(Resource):
             db.session.add(new_doc)
             db.session.commit()
             return "Success"
-        except Error as e:
+        except Exception as e:
             db.session.rollback()
-            return jsonify({"Error":e})
+            return "Integrity Error"
     
     def put(self, changes, d_id):
         try:

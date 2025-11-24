@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
-from api import Holiday_Apis, Appointment_Apis, Patient_Apis
+from api import Holiday_Apis, Appointment_Apis, Patient_Apis, Prescription_Apis
 
 doctor_bp = Blueprint("doctor", __name__)
 
@@ -11,22 +11,25 @@ def appointment_handler(a_id = None):
     claims = get_jwt()
     if claims['role'] != "Doctor":
         return "You are not authorized to access this route"
-    d_id = get_jwt_identity()
+    d_id = int(get_jwt_identity())
     if request.method == 'GET':
         if not a_id:
             appointments = Appointment_Apis().get(d_id=d_id)
         else: 
             appointments = Appointment_Apis().get(a_id=a_id)
-            if appointments.d_id != d_id:
+            if appointments.get("d_id")!= d_id:
                 return "You are not authorized to access this appointment"
         return appointments
     if request.method == 'POST':
         data = request.json
+        started = Appointment_Apis().started(a_id=a_id)
+        if not started:
+            return "The appointment has not started yet!"
         diagnosis = data.get('diagnosis')
         prescription = data.get('prescription')
-        result= Appointment_Apis().diagnosis(diagnosis)
+        result= Appointment_Apis().diagnosis(diagnosis=diagnosis, a_id=a_id)
         for p in prescription:
-            for_result = Prescription_Apis().post(p)
+            for_result = Prescription_Apis().post(p, a_id)
         return result, for_result
     if request.method == 'DELETE':
         appointment = db.session.get(a_id)
@@ -50,7 +53,7 @@ def holiday_handler(d_id):
     claims = get_jwt()
     if claims['role'] != "Doctor":
         return "You are not authorized to access this route"
-    d_id = get_jwt_identity()
+    d_id = int(get_jwt_identity())
 
     if request.method == 'GET':
         Holidays = Holiday_Apis().get(d_id)

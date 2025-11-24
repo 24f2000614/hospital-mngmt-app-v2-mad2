@@ -35,7 +35,7 @@ def appointment_handler(a_id=None):
     elif request.method == "DELETE":
         # appointment = db.session.get(Appointment, a_id)
         appointment = Appointment_Apis().get(a_id=a_id)
-        if appointment.p_id == p_id:
+        if appointment.get("p_id") == p_id:
             result = Appointment_Apis().delete(a_id=a_id)
             return result
         else:
@@ -71,7 +71,7 @@ def get_depts(dept_id=None):
 @jwt_required()
 def profile_handler():
     claims=get_jwt()
-    p_id=get_jwt_identity()
+    p_id=int(get_jwt_identity())
     if claims['role'] == "Patient" and p_id:
         if request.method == "GET":
             patient = Patient_Apis().get(p_id)

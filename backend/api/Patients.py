@@ -60,9 +60,9 @@ class Patient_Apis(Resource):
         history = {}
         appointments = Appointment_Apis().get(p_id=p_id)
         for appointment in appointments:
-            history[appointment.a_id] = {
+            history[appointment["a_id"]] = {
                 "appointment": appointment,
-                "prescriptions": Prescription_Apis().get(appointment.a_id)
+                "prescriptions": Prescription_Apis().get(appointment["a_id"])
             }
         return history
 

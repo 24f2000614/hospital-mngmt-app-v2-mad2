@@ -9,7 +9,7 @@ auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/login", methods=["POST"])
 def login():
     try:
-        email = request.json.get("email")
+        email = request.json.get("email").lower()
         password = request.json.get("password")
     except:
         return jsonify({"message":"Invalid Input"})
@@ -75,4 +75,4 @@ def register():
         return jsonify("Success")
     except IntegrityError as IE:
         db.session.rollback()
-        return IE
+        return "Integrity Error"

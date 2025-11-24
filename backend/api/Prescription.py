@@ -11,18 +11,10 @@ prescription_fields = {
 }
 
 class Prescription_Apis(Resource):
-    def get(self, pr_id=None, a_id=None):
-        if not pr_id and not a_id:
-            prescriptions = Prescription.query.all()
-            return [marshal(prescription,prescription_fields) for prescription in prescriptions]
-        elif pr_id and not a_id:
-            prescription = db.session.get(Prescription, pr_id)
-            return marshal(prescription, prescription_fields)
-        elif not pr_id and a_id:
-            prescriptions = Prescription.query.filter(Prescription.a_id == a_id).all()
-            return [marshal(prescription, prescription_fields) for prescription in prescriptions]
-        else:
-            return "Invalid Input params"
+    def get(self,a_id=None):
+        prescriptions = Prescription.query.filter(Prescription.a_id == a_id).all()
+        return [marshal(prescription, prescription_fields) for prescription in prescriptions]
+        
     def delete(self, pr_id=None):
         try:
             prescription = db.session.get(Prescription, pr_id)
@@ -34,9 +26,7 @@ class Prescription_Apis(Resource):
                 return "No prescription found"
         except IntegrityError:
             return "Integrity Error"
-    def post(self, data):
-        a_id=data.get("a_id")
-        medecine = data.get("medicine")
-        prescription = Prescription(a_id=a_id, medicine=medecine)
+    def post(self, medicine, a_id):
+        prescription = Prescription(a_id=a_id, medicine=medicine)
         db.session.add(prescription)
         db.session.commit()

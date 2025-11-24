@@ -1,18 +1,18 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
-from api import Patient_Apis, Doctor_Apis, Appointment_Apis, Department_Apis
+from api import Patient_Apis, Doctor_Apis, Appointment_Apis, Department_Apis, Prescription_Apis
 
 admin_bp = Blueprint("admin",__name__)
 
-@admin_bp.route("/patients", methods=['GET','POST'])
-@admin_bp.route("/patients/<int:p_id>", methods=['GET','POST'])
+@admin_bp.route("/patients")
+@admin_bp.route("/patients/<int:p_id>")
 @jwt_required()
 def patient_handler(p_id=None):
     claims=get_jwt()
     if claims['role'] == "Admin":
         data = Patient_Apis().get(p_id)
         history = Patient_Apis().history(p_id)
-        return data, history
+        return jsonify({"data":data, "history":history})
     return jsonify({"message": "You are not authorized to access this route"})
 
 @admin_bp.route("/doctors", methods=['GET','POST'])
@@ -49,10 +49,15 @@ def appointment_handler(a_id=None):
         if request.method == "GET":
             if a_id:
                 appointment = Appointment_Apis().get(a_id=a_id)
+                prescriptions = Prescription_Apis().get(a_id=a_id)
                 return appointment
             else:
+                response = {}
                 appointments = Appointment_Apis().get()
-                return appointments
+                for appointment in appointments:
+                    prescriptions = Prescription_Apis().get(a_id=appointment.a_id)
+                    response[appointment.a_id] = {"appointment": appointment, "prescription": prescription}
+                return response
         elif request.method == "DELETE":
             result = Appointment_Apis().cancel(a_id)
             return result
