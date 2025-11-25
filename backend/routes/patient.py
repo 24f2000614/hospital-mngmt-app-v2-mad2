@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity
-from api import Appointment_Apis, Department_Apis, Doctor_Apis
+from api import Appointment_Apis, Department_Apis, Doctor_Apis, Prescription_Apis
 
 patient_bp = Blueprint("patient", __name__)
 
@@ -14,8 +14,12 @@ def appointment_handler(a_id=None):
     p_id = int(get_jwt_identity())
 
     if request.method == 'GET':
-        appointments = Appointment_Apis().get(p_id=p_id, a_id= a_id)
-        return appointments
+        if not a_id:
+            appointments = Appointment_Apis().get(p_id=p_id)
+            return appointments
+        else: 
+            appointment =Appointment_Apis().get(p_id = p_id, a_id=a_id)
+            prescription = Prescription_Apis().get(a_id=a_id)
     elif request.method == "POST":
         data = request.json
         if data.get("p_id") == p_id:
@@ -63,7 +67,9 @@ def get_depts(dept_id=None):
     if claims['role'] != 'Patient':
         return "You are not authorized to access this route"
     if dept_id:
-        return Department_Apis().get(dept_id)
+        dept_info = Department_Apis().get(dept_id)
+        doctor_info = Doctor_Apis().get(dept_id=dept_id)
+        return jsonify({"dept": dept_info, "doctor_info":doctor_info})
     else:
         return Department_Apis().get()
 

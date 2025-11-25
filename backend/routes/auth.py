@@ -61,12 +61,27 @@ def register():
     name=data['name']
     sex=data['sex']
     password=data['password']
-    phone_no=data['phoneNum']
+    phone_no=str(data['phoneNum'])
     dob=list(map(int, data['dob'].split('-')))
     dob=date(dob[0], dob[1], dob[2])
+    
+    required_fields = ["email", "name", "sex", "password", "phoneNum", "dob"]
+    missing = [f for f in required_fields if f not in data or not data[f]]
+
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
 
     if db.session.get(Blacklist, email):
         return "This email is blacklisted"
+
+    if Patient.query.filter_by(phone_no=phone_no).first():
+        return jsonify({"error": "Phone number is already registered"}), 409
+    
+    if Patient.query.filter_by(email=email).first():
+        return jsonify({"error": "Email is already registered"}), 409
+
+    if len(phone_no) != 10:
+        return jsonify({"error": "Phone number is not ten digits"})
 
     try:
         new_user=Patient(email=email,password=generate_password_hash(password),phone_no=phone_no,name=name, dob=dob, sex=sex)

@@ -2,6 +2,7 @@ from flask import jsonify
 from flask_restful import Resource, fields, marshal
 from models import db, Doctor
 from werkzeug.security import generate_password_hash
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from .Appointment import Appointment_Apis
 
@@ -17,18 +18,19 @@ class Doctor_Apis(Resource):
     def get(self, d_id=None, dept_id= None):
         if d_id and dept_id:
             return "Only one param at a time!"
-        if d_id == None:
-            items = Doctor.query.all()
-            data = [marshal(item, doctor_fields) for item in items]
-            return jsonify(data)
-        elif type(d_id) == int:
+
+        if dept_id is not None:
+            items = Doctor.query.filter_by(dept_id=dept_id).all()
+            return [marshal(item, doctor_fields) for item in items]
+
+        if d_id is not None:
             item = db.session.get(Doctor, d_id)
-            data = marshal(item, doctor_fields)
-            return jsonify(data)
-        elif dept_id:
-            items = Doctor.query.filter(Doctor.dept_id == dept_id).all()
-            data = [marshal(item, doctor_fields) for item in items]
-            return jsonify(data)
+            if not item:
+                return {"error": "Doctor not found"}
+            return marshal(item, doctor_fields)
+
+        items = Doctor.query.all()
+        return [marshal(item, doctor_fields) for item in items]
 
     def post(self, data):
         try:
@@ -52,7 +54,10 @@ class Doctor_Apis(Resource):
                 return {"message": "Doctor not found"}, 404
             for key, value in changes.items():
                 if hasattr(doctor, key) and "id" not in key:
-                    setattr(doctor, key, value)
+                    if key == "password":
+                        setattr(doctor, key, generate_password_hash(value))
+                    else:
+                        setattr(doctor, key, value)
             db.session.commit()
             return "Success"
         except Error as e:
@@ -74,7 +79,12 @@ class Doctor_Apis(Resource):
 
     def search(self, searchQ, d_id= None):
         if not d_id:
-            results = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%")).limit(5).all()
+            results = Doctor.query.filter(
+                or_(
+                    Doctor.name.ilike(f"%{searchQ}%"),
+                    Doctor.email.ilike(f"%{searchQ}%")
+                    )
+                ).limit(5).all()
         else:
             results = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%"), Doctor.dept_id == d_id).limit(5).all()
 

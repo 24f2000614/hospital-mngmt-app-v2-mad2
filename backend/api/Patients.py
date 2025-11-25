@@ -1,7 +1,8 @@
 from flask import jsonify
 from flask_restful import Resource, fields, marshal
-from models import Patient, Blacklist
+from models import db, Patient, Blacklist
 from .Appointment import Appointment_Apis, Prescription_Apis
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
 
@@ -23,7 +24,7 @@ class Patient_Apis(Resource):
             return data
         else:
             try:
-                item = Patient.query.filter(p_id == p_id).first()
+                item = Patient.query.filter(Patient.p_id == p_id).first()
                 data = marshal(item, patient_fields)
                 return data
             except:
@@ -34,7 +35,7 @@ class Patient_Apis(Resource):
             patient = db.session.get(Patient, p_id)
             if not patient:
                 return "No patient found"
-            b_listed_item = Blacklist(email = patient.email, phone_no= patient.phone_no)
+            b_listed_item = Blacklist(email = patient.email)
             db.session.add(b_listed_item)
             db.session.delete(patient)
             db.session.commit()
@@ -53,7 +54,12 @@ class Patient_Apis(Resource):
                 ).limit(5).all()
             return [marshal(search_item, patient_fields) for search_item in search_by_num]
         else:
-            search_by_name = Patient.query.filter(Patient.name.ilike(f"%{searchQ}%")).limit(5).all()
+            search_by_name = Patient.query.filter(
+                or_(
+                    Patient.name.ilike(f"%{searchQ}%"),
+                    Patient.email.ilike(f"%{searchQ}%")
+                    )
+                ).limit(5).all()
             return [marshal(search_item, patient_fields) for search_item in search_by_name]
 
     def history(self, p_id):
@@ -68,12 +74,15 @@ class Patient_Apis(Resource):
 
     def put(self, changes, p_id):
         try:
-            patient = db.session.get(p_id)
+            patient = db.session.get(Patient,p_id)
             for key, value in changes.items():
                 if hasattr(patient, key) and "id" not in key:
-                    setattr(patient, key, value)
+                    if key == "password":
+                        setattr(doctor, key, generate_password_hash(value))
+                    else:
+                        setattr(doctor, key, value)
             db.session.commit()
             return "Success"
-        except Error as e:
+        except IntegrityError:
             db.session.rollback()
             return jsonify({"Error":e})

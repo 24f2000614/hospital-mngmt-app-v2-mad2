@@ -147,8 +147,6 @@ class Appointment_Apis(Resource):
             return False
         return True
         
-
-
     def diagnosis(self, a_id, diagnosis):
         appointment = db.session.get(Appointment,a_id)
         now = datetime.now()

@@ -9,7 +9,7 @@ from datetime import timedelta
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Lhospital.sqlite3"
 app.config['JWT_SECRET_KEY'] = "BuffaloWings"
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=50)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=100)
 jwt = JWTManager(app)
 
 db.init_app(app)

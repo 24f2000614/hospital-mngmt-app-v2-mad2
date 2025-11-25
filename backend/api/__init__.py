@@ -4,3 +4,4 @@ from .Prescription import Prescription_Apis
 from .Appointment import Appointment_Apis
 from .Departments import Department_Apis
 from .Holiday import Holiday_Apis
+from .Blacklist import Blacklist_Apis
