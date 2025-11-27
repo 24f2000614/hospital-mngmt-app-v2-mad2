@@ -1,7 +1,7 @@
-from flask import Flask
+from flask import Flask, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from routes import auth_bp, admin_bp, patient_bp, doctor_bp
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, verify_jwt_in_request
 from models import db, Admin, Patient, Doctor, Department
 from flask_cors import CORS
 from datetime import timedelta
@@ -13,7 +13,12 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=100)
 jwt = JWTManager(app)
 
 db.init_app(app)
-CORS(app, origins=["http://localhost:5173"])
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+
+@app.before_request
+def skip_jwt_for_options():
+    if request.method == "OPTIONS":
+        return '', 200
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp, url_prefix='/admin')

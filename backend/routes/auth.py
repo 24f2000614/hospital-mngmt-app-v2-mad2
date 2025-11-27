@@ -46,6 +46,7 @@ def login():
         return jsonify(
             {
                 "message": "Logged In!",
+                "role" : f"{role}",
                 "tokens": {
                     "access_token": access_token,
                 }

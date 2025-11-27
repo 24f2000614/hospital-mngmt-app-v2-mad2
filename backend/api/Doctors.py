@@ -45,7 +45,7 @@ class Doctor_Apis(Resource):
             return "Success"
         except Exception as e:
             db.session.rollback()
-            return "Integrity Error"
+            return jsonify({"error": str(e)}), 400
     
     def put(self, changes, d_id):
         try:

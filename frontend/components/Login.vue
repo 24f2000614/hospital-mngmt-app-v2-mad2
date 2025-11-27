@@ -2,6 +2,10 @@
 // import WelcomeItem from './WelcomeItem.vue'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { reactive } from 'vue';
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 const loginForm = reactive({
   email:'',
   password:''
@@ -16,8 +20,19 @@ const loginUser = async () => {
         },
         body: JSON.stringify(loginForm)
       })
-      const result = await response.json()
-      console.log(result)
+      const data = await response.json()
+      if(!response.ok) {
+        throw new Error(JSON.stringify(data.error));
+      } else {
+        localStorage.setItem('token', data.tokens["access_token"])
+        localStorage.setItem('role', data.role)
+        if (data.role === 'Admin') {
+          router.push({name: 'adminHome'})
+        }
+        else {
+          router.push('/user')
+        }
+      }
   } catch( error ) {
     console.log(error)
   }

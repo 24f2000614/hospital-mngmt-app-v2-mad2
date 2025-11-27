@@ -10,7 +10,6 @@ const registrationForm = reactive({
   phoneNum:'',
 })
 const date = new Date().toISOString().split("T")[0]
-console.log(date)
 const registerUser = async () => {
   try {
     const response = await fetch('http://127.0.0.1:5000/register', {
@@ -20,12 +19,15 @@ const registerUser = async () => {
       },
       body: JSON.stringify(registrationForm)
     })
-    const result = await response.json()
-    console.log(result)
-    // alert(`Result: ${result["name"]}`)
+    if(!response.ok) {
+      const error = await response.json()
+      throw new Error(JSON.stringify(error.error));
+    }
+    else {
+      alert("Successfully Registered")
+    }
   } catch (error) {
-    // alert(error)
-    alert(`Error: ${error}`)
+    alert(`${error}`)
   }
 }
 </script>
@@ -51,15 +53,15 @@ const registerUser = async () => {
           <label for="dob" class="form-label">Date of Birth</label>
           <input type="date" class="form-control" v-model="registrationForm.dob" id="dob" aria-label="dob" :max="date" required >
         </div>
-        <label for="sex" class="form-label">Sex</label>
+        <label for="sex" class="form-label">Gender</label>
         <div class="form-check">
-          <input class="form-check-input" type="radio" name="sex" id="female" value="F" checked>
+          <input class="form-check-input" type="radio" name="sex" id="female" value="F" v-model="registrationForm.sex" checked>
           <label class="form-check-label" for="female">
             Female
           </label>
         </div>
         <div class="form-check">
-          <input class="form-check-input" type="radio" name="sex" id="male" value="M">
+          <input class="form-check-input" type="radio" name="sex" id="male" v-model="registrationForm.sex" value="M">
           <label class="form-check-label" for="male">
             Male
           </label>

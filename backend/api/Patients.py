@@ -5,6 +5,7 @@ from .Appointment import Appointment_Apis, Prescription_Apis
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
+from datetime import datetime
 
 patient_fields = {
     "p_id": fields.Integer,
@@ -78,11 +79,13 @@ class Patient_Apis(Resource):
             for key, value in changes.items():
                 if hasattr(patient, key) and "id" not in key:
                     if key == "password":
-                        setattr(doctor, key, generate_password_hash(value))
+                        setattr(patient, key, generate_password_hash(value))
+                    elif key == "dob":
+                        setattr(patient, key, datetime.strptime(value, "%Y-%m-%d").date())
                     else:
-                        setattr(doctor, key, value)
+                        setattr(patient, key, value)
             db.session.commit()
             return "Success"
-        except IntegrityError:
+        except Exception as e:
             db.session.rollback()
-            return jsonify({"Error":e})
+            return jsonify({"message":str(e)})

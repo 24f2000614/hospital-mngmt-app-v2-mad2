@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
+from flask_cors import cross_origin
 from api import Patient_Apis, Doctor_Apis, Appointment_Apis, Department_Apis, Prescription_Apis, Blacklist_Apis
 
 admin_bp = Blueprint("admin",__name__)
@@ -12,8 +13,7 @@ def patient_handler(p_id=None):
     if claims['role'] == "Admin":
         if request.method == "GET":
             data = Patient_Apis().get(p_id)
-            history = Patient_Apis().history(p_id)
-            return jsonify({"data":data, "history":history})
+            return data
         elif request.method == "DELETE": 
             if p_id:
                 Patient_Apis().blacklist(p_id)
@@ -28,6 +28,16 @@ def patient_handler(p_id=None):
             else: 
                 return "Missing patient id"
     return jsonify({"message": "You are not authorized to access this route"})
+
+@admin_bp.route("/history/<int:p_id>")
+@jwt_required()
+def history_handler(p_id):
+    claims = get_jwt()
+    if claims['role'] == "Admin":
+        history = Patient_Apis().history(p_id)
+        return history
+    else: 
+        return jsonify({"message": "You are not authorized to access this route"})
 
 @admin_bp.route("/doctors", methods=['GET','POST'])
 @admin_bp.route("/doctors/<int:d_id>", methods=['GET','PUT','DELETE'])
@@ -78,7 +88,7 @@ def appointment_handler(a_id=None):
     else:
         return jsonify({"message": "You are not authorized to access this route"})
 
-@admin_bp.route("/search/<srch_type>", methods=['GET'])
+@admin_bp.route("/search/<srch_type>", methods=['POST'])
 @jwt_required()
 def search_handler(srch_type):
     claims= get_jwt()
@@ -98,7 +108,7 @@ def search_handler(srch_type):
         return jsonify({"message": "You are not authorized to access this route"})
 
 @admin_bp.route("/dept", methods=['GET', 'POST'])
-@admin_bp.route("/dept/<int:dept_id>", methods=['GET', 'PUT'])
+@admin_bp.route("/dept/<int:dept_id>", methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def department_handler(dept_id = None):
     claims = get_jwt()
@@ -113,6 +123,10 @@ def department_handler(dept_id = None):
         result = Department_Apis().post(data)
         return result
     elif request.method == 'PUT':
+        changes = request.json
+        result = Department_Apis().put(changes, dept_id)
+        return result
+    elif request.method == 'DELETE':
         changes = request.json
         result = Department_Apis().put(changes, dept_id)
         return result
