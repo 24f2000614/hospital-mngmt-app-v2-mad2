@@ -4,7 +4,7 @@ Hospital Management System (HMS) web application that allows Admins, Doctors, an
 This app corresponds to my submission for the Modern Application Development 2 (MAD2) Project, and it utilizes the following frameworks:
 
 - Flask
-- VueJS + Router + Pinia
+- VueJS + Router 
 - Bootstrap
 - SQLiteDB
 - Redis
