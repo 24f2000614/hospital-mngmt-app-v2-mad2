@@ -65,7 +65,7 @@ class Patient_Apis(Resource):
 
     def history(self, p_id):
         history = {}
-        appointments = Appointment_Apis().get(p_id=p_id)
+        appointments = Appointment_Apis().get(p_id=p_id, status='Completed')
         for appointment in appointments:
             history[appointment["a_id"]] = {
                 "appointment": appointment,

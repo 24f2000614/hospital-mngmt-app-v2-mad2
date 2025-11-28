@@ -53,7 +53,7 @@ def login():
             }
         )
     else:
-        return jsonify({"message":"Incorrect Email or Password"})
+        return jsonify({"message":"Incorrect Email or Password"}), 401
 
 @auth_bp.route("/register", methods=["POST"])
 def register():

@@ -1,13 +1,15 @@
-import { createRouter, createWebHistory, useRoute } from 'vue-router'
-import { getToken, isTokenValid, getUserRole } from '@/auth'
+import { createRouter, createWebHistory } from 'vue-router'
+import { getToken, isTokenValid, getUserRole, getUserId } from '@/auth'
 import { get } from '@/utils'
 import Login from '../components/Login.vue'
 import Register from '../components/Register.vue'
 import Dashboard from '../components/Dashboard.vue'
 import WelcomeView from '../views/WelcomeView.vue'
-import AdminView from '../views/AdminView.vue'
+import UserView from '../views/UserView.vue'
 import Form from '../components/Form.vue'
+import Appointment from '../components/Appointment.vue'
 
+const token = getToken()
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -32,7 +34,15 @@ const router = createRouter({
       path: "/admin",
       name: "adminHome",
       meta: { requiresAuth: true, role: 'Admin' },
-      component: AdminView,
+      component: UserView,
+      props: {
+        navItems: [
+          {name:"Doctors", route:"adminDoctors"},
+          {name:"Patients", route:"adminPatient"},
+          {name:"Department", route:"adminDept"},
+          // {name:"Appointments", route:"adminAppointments"},
+        ]
+      },
       children: [
         {
           path: "doctor",
@@ -42,7 +52,8 @@ const router = createRouter({
                   endpoint: "admin/doctors",
                   formpoint: "adminDoctorDetails",
                   newpoint: "adminNewDoctor",
-                  searchpoint: "http://127.0.0.1:5000/admin/search/doctors"
+                  searchpoint: "admin/search/doctors",
+                  primary_fields: ['name', 'description']
                 },
           meta: { requiresAuth: true, role: 'Admin' },
           children: [
@@ -57,10 +68,10 @@ const router = createRouter({
                   { key: 'email', label: 'Email', type: 'email', required: true,},
                   { key: 'description', label: 'Description', type: 'text', required: true, },
                   { key: 'dept_id', label: 'Department', type: 'select', required: true,
-                    options: await get('http://127.0.0.1:5000/admin/dept')
+                    options: getUserRole(token) === 'Admin' ? await get('http://127.0.0.1:5000/admin/dept'): ''
                   },
                 ],
-                submitUrl: 'http://127.0.0.1:5000/admin/doctors',
+                submitUrl: 'admin/doctors',
                 method: 'PUT',
                 action: 'Delete'
                 },
@@ -76,10 +87,10 @@ const router = createRouter({
                   { key: 'email', label: 'Email', type: 'email', required: true,},
                   { key: 'description', label: 'Description', type: 'text', required: true, },
                   { key: 'dept_id', label: 'Department', type: 'select', required: true,
-                    options: await get('http://127.0.0.1:5000/admin/dept')
+                    options: getUserRole(token) === 'Admin' ? await get('http://127.0.0.1:5000/admin/dept'): ''
                   },
                 ],
-                submitUrl: 'http://127.0.0.1:5000/admin/doctors',
+                submitUrl: 'admin/doctors',
                 method: 'POST',
                 },
             }
@@ -92,7 +103,8 @@ const router = createRouter({
           props: { heading: "Patients", 
                   endpoint: "admin/patients",
                   formpoint: "adminPatientDetails",
-                  searchpoint: "http://127.0.0.1:5000/admin/search/patients"
+                  searchpoint: "admin/search/patients",
+                  primary_fields: ['name', 'email']
                 },
           meta: { requiresAuth: true, role: 'Admin' },
           children: [
@@ -108,8 +120,9 @@ const router = createRouter({
                   { key: 'dob', label: 'Date of Birth', type: 'date', required: true,},
                   { key: 'phone_no', label: 'Phone number', type: 'text', required: true,},
                   { key: 'sex', label: 'Gender', type: 'radio', required: true, options: ['M', 'F']},
+                  { key: 'address', label: 'Address', type: 'textarea', required: true},
                 ],
-                submitUrl: 'http://127.0.0.1:5000/admin/patients/',
+                submitUrl: 'admin/patients/',
                 method: 'PUT',
                 action: 'Blacklist'
               }
@@ -124,7 +137,8 @@ const router = createRouter({
                   endpoint: "admin/dept",
                   formpoint: "adminDeptDetails",
                   newpoint: "adminNewDept",
-                  searchpoint: "http://127.0.0.1:5000/admin/search/departments"
+                  searchpoint: "admin/search/departments",
+                  primary_fields: ['name', 'description']
                 },
           meta: { requiresAuth: true, role: 'Admin' },
           children: [
@@ -138,9 +152,8 @@ const router = createRouter({
                   { key: 'name', label: 'Dept Name', type: 'text', required: true},
                   { key: 'description', label: 'Description', type: 'text', required: true,},
                 ],
-                submitUrl: 'http://127.0.0.1:5000/admin/dept',
+                submitUrl: 'admin/dept',
                 method: 'PUT',
-                action: 'Delete'
               }
             },
             {
@@ -153,21 +166,119 @@ const router = createRouter({
                   { key: 'name', label: 'Dept Name', type: 'text', required: true},
                   { key: 'description', label: 'Description', type: 'text', required: true,},
                 ],
-                submitUrl: 'http://127.0.0.1:5000/admin/dept',
+                submitUrl: 'admin/dept',
                 method: 'POST'
               }
             }
           ]
         },
-              {
-          path: "appointments",
-          name: "adminAppointments",
+
+      ]
+    },
+    {
+      path: "/patient",
+      name: "patientHome",
+      meta: { requiresAuth: true, role: 'Patient'},
+      component: UserView,
+      props: {
+        navItems: [
+          {name:"Appointments", route:"patientAppointments"},
+          {name:"Department", route:"patientDept"},
+          {name: "Profile", route:"patientProfile", id: `${getUserId(token)}`},
+          {name:"Book", route:"patientBookings"},
+          {name:"History", route:"patientHistory"},
+
+        ]
+      },
+      children:[
+        {
+          path: 'department',
+          name: "patientDept",
           component: Dashboard,
-          props: { heading: "Appointments", 
-                  endpoint: "admin/appointments"
-                },
-          meta: { requiresAuth: true, role: 'Admin' },
+          props: {
+            heading: "Departments",
+            endpoint: "patient/dept",
+            formpoint: "deptDoctorList",
+            searchpoint: "patient/search-dept",
+            primary_fields: ['name', 'description']
+          },
+          children: [
+            {
+              path: ":id",
+              name: "deptDoctorList",
+              component: Dashboard,
+              props: {
+                heading: "List of doctors",
+                endpoint: "patient/dept",
+                formpoint: "",
+                searchpoint: "patient/search-doctor",
+                primary: "dept",
+                primary_fields: ['name', 'description'],
+                secondary: "doctor_list",
+                secondary_fields: ['name', 'description'],
+              }
+            }
+          ]
         },
+        {
+          path: 'profile/:id',
+          name: "patientProfile",
+          component: Form,
+          props:{
+            heading: "Patient Details",
+            fields: [
+              { key: 'name', label: 'Patient Name', type: 'text', required: true},
+              { key: 'email', label: 'Email', type: 'email', required: true,},
+              { key: 'dob', label: 'Date of Birth', type: 'date', required: true,},
+              { key: 'phone_no', label: 'Phone number', type: 'text', required: true,},
+              { key: 'sex', label: 'Gender', type: 'radio', required: true, options: ['M', 'F']},
+              { key: 'address', label: 'Address', type: 'textarea', required: true},
+            ],
+            submitUrl: "patient/profile",
+            method: 'PUT'
+          }
+        },
+        {
+          path: "booking",
+          name: "patientBookings",
+          component: Appointment,
+          props: {
+            isProgressive: true
+          }
+        },
+        {
+          path: "appointment",
+          name: "patientAppointments",
+          component: Dashboard,
+          props: {
+            heading: "Appointments",
+            endpoint: "patient/appointments",
+            formpoint: "patientAppDetails",
+            primary_fields: ['start_time', 'status']
+          },
+          children: [
+            {
+              path: ":id",
+              name: "patientAppDetails",
+              component: Appointment,
+              props: {
+                isProgressive: false
+              }
+            }
+          ]
+        },
+        {
+          path: 'history',
+          name: 'patientHistory',
+          component: Dashboard,
+          props: {
+            heading: "History",
+            endpoint: "patient/dept",
+            formpoint: "deptDoctorList",
+            searchpoint: "patient/search-dept",
+            primary_fields: ['name', 'description']
+          }
+        }
       ]
     }
   ],

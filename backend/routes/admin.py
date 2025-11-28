@@ -27,7 +27,7 @@ def patient_handler(p_id=None):
                 return result
             else: 
                 return "Missing patient id"
-    return jsonify({"message": "You are not authorized to access this route"})
+    return jsonify({"message": "You are not authorized to access this route"}), 403
 
 @admin_bp.route("/history/<int:p_id>")
 @jwt_required()
@@ -37,7 +37,7 @@ def history_handler(p_id):
         history = Patient_Apis().history(p_id)
         return history
     else: 
-        return jsonify({"message": "You are not authorized to access this route"})
+        return jsonify({"message": "You are not authorized to access this route"}), 403
 
 @admin_bp.route("/doctors", methods=['GET','POST'])
 @admin_bp.route("/doctors/<int:d_id>", methods=['GET','PUT','DELETE'])
@@ -62,7 +62,7 @@ def doctor_handler(d_id=None):
                 return jsonify(result)
             else:
                 return "Deleting requires specific ID"
-    return jsonify({"message": "You are not authorized to access this route"})
+    return jsonify({"message": "You are not authorized to access this route"}), 403
 
 @admin_bp.route("/appointments", methods=['GET'])
 @admin_bp.route("/appointments/<int:a_id>", methods=['GET','DELETE'])
@@ -76,17 +76,17 @@ def appointment_handler(a_id=None):
                 prescriptions = Prescription_Apis().get(a_id=a_id)
                 return appointment
             else:
-                response = {}
+                response = []
                 appointments = Appointment_Apis().get()
                 for appointment in appointments:
-                    prescriptions = Prescription_Apis().get(a_id=appointment.a_id)
-                    response[appointment.a_id] = {"appointment": appointment, "prescription": prescription}
+                    prescriptions = Prescription_Apis().get(a_id=appointment['a_id'])
+                    response.append({"appointment": appointment, "prescription": prescriptions})
                 return response
         elif request.method == "DELETE":
             result = Appointment_Apis().cancel(a_id)
             return result
     else:
-        return jsonify({"message": "You are not authorized to access this route"})
+        return jsonify({"message": "You are not authorized to access this route"}), 403
 
 @admin_bp.route("/search/<srch_type>", methods=['POST'])
 @jwt_required()
@@ -105,7 +105,7 @@ def search_handler(srch_type):
         else:
             return "Not a valid search"
     else:
-        return jsonify({"message": "You are not authorized to access this route"})
+        return jsonify({"message": "You are not authorized to access this route"}), 403
 
 @admin_bp.route("/dept", methods=['GET', 'POST'])
 @admin_bp.route("/dept/<int:dept_id>", methods=['GET', 'PUT', 'DELETE'])
@@ -113,7 +113,7 @@ def search_handler(srch_type):
 def department_handler(dept_id = None):
     claims = get_jwt()
     if claims['role'] != "Admin":
-        return "You are not authorized to access this route"
+        return jsonify({"message":"You are not authorized to access this route"}),403
     
     if request.method == 'GET':
         dept = Department_Apis().get(dept_id)
@@ -136,7 +136,7 @@ def department_handler(dept_id = None):
 def get_blacklist():
     claims = get_jwt()
     if claims['role'] != "Admin":
-        return "You are not authorized to access this route"
+        return jsonify({"message":"You are not authorized to access this route"}),403
     
     blacklist = Blacklist_Apis().get()
     return blacklist

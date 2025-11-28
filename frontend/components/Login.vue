@@ -29,8 +29,11 @@ const loginUser = async () => {
         if (data.role === 'Admin') {
           router.push({name: 'adminHome'})
         }
-        else {
-          router.push('/user')
+        else if(data.role === 'Patient') {
+          router.push({name: 'patientHome'})
+        }
+        else if (data.role === 'Doctor') {
+          router.push({name: 'doctorHome'})
         }
       }
   } catch( error ) {

@@ -10,7 +10,7 @@ doctor_bp = Blueprint("doctor", __name__)
 def appointment_handler(a_id = None):
     claims = get_jwt()
     if claims['role'] != "Doctor":
-        return "You are not authorized to access this route"
+        return jsonify({"message":"You are not authorized to access this route"}),403
     d_id = int(get_jwt_identity())
     if request.method == 'GET':
         if not a_id:
@@ -18,7 +18,7 @@ def appointment_handler(a_id = None):
         else: 
             appointments = Appointment_Apis().get(a_id=a_id)
             if appointments.get("d_id")!= d_id:
-                return "You are not authorized to access this appointment"
+                return jsonify({"message":"You are not authorized to access this route"}),403
         return appointments
     if request.method == 'POST':
         data = request.json
@@ -42,7 +42,8 @@ def appointment_handler(a_id = None):
 def history_handler(p_id):
     claims = get_jwt()
     if claims['role'] != "Doctor":
-        return "You are not authorized to access this route"
+        return jsonify({"message":"You are not authorized to access this route"}),403
+
     
     history = Patient_Apis().history(p_id)
     return history
@@ -52,7 +53,7 @@ def history_handler(p_id):
 def holiday_handler(d_id):
     claims = get_jwt()
     if claims['role'] != "Doctor":
-        return "You are not authorized to access this route"
+        return jsonify({"message":"You are not authorized to access this route"}),403
     d_id = int(get_jwt_identity())
 
     if request.method == 'GET':

@@ -19,7 +19,7 @@ appointment_fields = {
     "diagnosis": fields.String
 }
 
-def Rules_and_conflict(start_time, duration, d_id):
+def Rules_and_conflict(start_time, d_id):
     if start_time.date() <= datetime.now().date():
         return "Appointments need to be booked at least one day before" 
 
@@ -34,16 +34,10 @@ def Rules_and_conflict(start_time, duration, d_id):
             return f"Dr. {name} is unavailable for this date"
 
     if start_time.time() < time(9,0) or start_time.time() > time(22, 0):
-        return "Appointments need to be booked during office hours only 9-6"
-
-    if duration > 60:
-        return "Appointments cannot be booked for more than an hour"
-    
-    if start_time.minute % 15 != 0 or start_time.second != 0:
-        return "You can only book an appointment every 15 minutes"    
+        return "Appointments need to be booked during office hours only 9-6" 
 
     date = start_time.date()
-    end_time = start_time + timedelta(minutes=duration)
+    end_time = start_time + timedelta(minutes=60)
     appointments = Appointment.query.filter(
         func.date(Appointment.start_time) == date, 
         Appointment.d_id == d_id,
@@ -58,58 +52,58 @@ def Rules_and_conflict(start_time, duration, d_id):
     return "OK"
 
 class Appointment_Apis(Resource):
-    def get(self, a_id=None, p_id = None, d_id=None):
-        if not a_id and not p_id and not d_id:
-            appointments = Appointment.query.all()
-            return [marshal(appointment, appointment_fields) for appointment in appointments]
-        elif a_id and not p_id and not d_id:
+    def get(self, a_id=None, p_id = None, d_id=None, date=None, status=None):
+        if a_id:
             appointment = db.session.get(Appointment, a_id)
-            return marshal(appointment, appointment_fields)
-        elif not a_id and p_id and not d_id:
-            appointments = Appointment.query.filter(Appointment.p_id == p_id).all()
-            return [marshal(appointment, appointment_fields) for appointment in appointments]
-        elif not a_id and not p_id and d_id:
-            appointments = Appointment.query.filter(Appointment.d_id == d_id).all()
-            return [marshal(appointment, appointment_fields) for appointment in appointments]
-        elif a_id and p_id and not d_id:
-            appointments = Appointment.query.filter(Appointment.p_id == p_id, Appointment.a_id == a_id).all()
-            return [marshal(appointment, appointment_fields) for appointment in appointments]
-        else:
-            return "Invalid params"
-             
+            return marshal(appointment, appointment_fields) if appointment else None
+
+        query = Appointment.query
+
+        if p_id is not None:
+            query = query.filter(Appointment.p_id == p_id)
+        if d_id is not None:
+            query = query.filter(Appointment.d_id == d_id)
+        if date is not None:
+            query = query.filter(func.date(Appointment.start_time) == date)
+        if status is not None:
+            query = query.filter(Appointment.status == status)
+        appointments = query.all()
+        return [marshal(appointment, appointment_fields) for appointment in appointments]
+
     def post(self, data):
         p_id= data.get("p_id")
         d_id= data.get("d_id")
-        start_time= datetime.fromisoformat(data["start"])
-        duration = data.get("duration")
-        end_time = start_time + timedelta(minutes = data["duration"])
+        date = data.get("date")
+        start_time= data.get("start_time")
+        start_input = datetime.strptime(f"{date} {start_time}", '%A %d-%m-%Y %H')
+        end_time = start_input + timedelta(minutes = 60)
         status= data["status"]
-        prescription= data.get('pr_id')
 
-        conflict_check = Rules_and_conflict(start_time, duration, d_id)
+        conflict_check = Rules_and_conflict(start_input, d_id)
         if conflict_check != "OK":
             return conflict_check
         try:
-            new_appoint = Appointment(p_id=p_id,d_id=d_id,start_time=start_time,end_time=end_time,status=status,pr_id=prescription)
+            new_appoint = Appointment(p_id=p_id,d_id=d_id,start_time=start_input,end_time=end_time,status=status)
             db.session.add(new_appoint)
             db.session.commit()
-            return "Success"
+            return "Success", 200
         except IntegrityError:
             db.session.rollback()
             return "Integrity Error"
 
-    def reschedule(self, new_start, duration, a_id):
+    def reschedule(self, new_start, a_id):
         try:
             appointment = db.session.get(Appointment, a_id)
-            new_start = datetime.fromisoformat(new_start)
+            # start_time= datetime.strptime(appointment.start_time, "%Y-%m-%d %H:%M:%S.%f")
+            new_start_time = appointment.start_time.replace(hour=new_start)
             
-            conflict_check = Rules_and_conflict(start_time, duration, d_id)
+            conflict_check = Rules_and_conflict(new_start_time, appointment.d_id)
             if conflict_check != "OK":
                 return conflict_check
             
             if appointment.status == "Booked":
-                appointment.start_time = new_start
-                appointment.end_time = new_start + timedelta(minutes=duration)
+                appointment.start_time = new_start_time
+                appointment.end_time = new_start_time + timedelta(minutes=60)
                 db.session.commit()
                 rescheduled = marshal(db.session.get(Appointment, a_id), appointment_fields)
                 return jsonify({"message": "Success", "rescheduled": rescheduled })
@@ -126,7 +120,7 @@ class Appointment_Apis(Resource):
                 if appointment.status != 'Completed':
                     db.session.delete(appointment)
                     db.session.commit()
-                    return "Success"
+                    return "Success", 200
                 else:
                     return "This appointment is completed and cannot be deleted."
             else:
@@ -157,4 +151,4 @@ class Appointment_Apis(Resource):
         appointment.diagnosis = diagnosis
         appointment.status = "Completed"
         db.session.commit()
-        return "Success"
+        return "Success", 200

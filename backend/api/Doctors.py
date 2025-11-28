@@ -17,7 +17,7 @@ doctor_fields = {
 class Doctor_Apis(Resource):
     def get(self, d_id=None, dept_id= None):
         if d_id and dept_id:
-            return "Only one param at a time!"
+            return jsonify({"message":str(e)}), 400
 
         if dept_id is not None:
             items = Doctor.query.filter_by(dept_id=dept_id).all()
@@ -26,7 +26,7 @@ class Doctor_Apis(Resource):
         if d_id is not None:
             item = db.session.get(Doctor, d_id)
             if not item:
-                return {"error": "Doctor not found"}
+                return jsonify({"message":str(e)}), 400
             return marshal(item, doctor_fields)
 
         items = Doctor.query.all()
@@ -60,9 +60,9 @@ class Doctor_Apis(Resource):
                         setattr(doctor, key, value)
             db.session.commit()
             return "Success"
-        except Error as e:
+        except Exception as e:
             db.session.rollback()
-            return jsonify({"Error":e})
+            return jsonify({"message":str(e)}), 400
 
     def delete(self,d_id):
         try:
@@ -74,8 +74,8 @@ class Doctor_Apis(Resource):
                 return "Doctor does not exist"
             db.session.commit()
             return "Success"
-        except IntegrityError:
-            return "Integrity Error"
+        except Exception as e:
+            return jsonify({"message":str(e)}), 400
 
     def search(self, searchQ, d_id= None):
         if not d_id:

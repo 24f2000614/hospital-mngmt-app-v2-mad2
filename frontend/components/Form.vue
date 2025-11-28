@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted, watch, defineEmits } from "vue";
+import { reactive, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { get } from "@/utils";
 const props = defineProps({
@@ -21,7 +21,7 @@ let initialData = null
 onMounted(async () => {
     try {
         if (id){
-            initialData = await get(props.submitUrl + `/${route.params.id}`);
+            initialData = await get(`http://127.0.0.1:5000/${props.submitUrl}/${id}`);
             Object.assign(form, initialData);
         }
     } catch (err) {
@@ -32,14 +32,14 @@ onMounted(async () => {
 
 if(id) {
     watch(() => route.params.id, async () => {
-        initialData = await get(props.submitUrl + `/${route.params.id}`);
+        initialData = await get(`http://127.0.0.1:5000/${props.submitUrl}/${route.params.id}`);
         Object.assign(form, initialData);
     })
 }
 
 
 const handleSubmit = async () => {
-    const url = id ? `${props.submitUrl}/${id}` : props.submitUrl;
+    const url = id ? `http://127.0.0.1:5000/${props.submitUrl}/${route.params.id}` : `http://127.0.0.1:5000/${props.submitUrl}`;
     await fetch(url, {
         method: props.method,
         headers: {
@@ -57,7 +57,7 @@ const handleSubmit = async () => {
 };
 
 const handleDelete = async () => {
-    const url = `${props.submitUrl}/${id}`
+    const url = `http://127.0.0.1:5000/${props.submitUrl}/${route.params.id}`
     await fetch(url, {
         method: 'DELETE',
         headers: {
@@ -92,7 +92,7 @@ const handleDelete = async () => {
         class="form-select"
         :required="field.required"
         >
-        <option v-for="opt in field.options" :value="opt.dept_id">
+        <option v-for="opt in field.options" :value="opt.dept_id" >
             {{ opt.name }}
         </option>
     </select>
@@ -113,7 +113,7 @@ const handleDelete = async () => {
     </button>
 
   </form>
-  <button v-if="props.method === 'PUT'" class="btn btn-primary my-1" @click="handleDelete">
+  <button v-if="props.action" class="btn btn-secondary my-1" @click="handleDelete">
         {{ props.action }}
     </button>
 </template>
