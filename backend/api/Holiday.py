@@ -16,6 +16,7 @@ class Holiday_Apis(Resource):
         return [marshal(holiday, holiday_fields) for holiday in Holidays]
 
     def isAvailable(self, date, d_id):
+        # print(type(date), d_id)
         HolidayMatch = Holiday.query.filter(
             Holiday.d_id == d_id,
             Holiday.date == date
@@ -26,15 +27,17 @@ class Holiday_Apis(Resource):
 
     def book(self, d_id, date):
         try:
+            date = datetime.strptime(date, '%A %d-%m-%Y')
             getApp = Appointment.query.filter(
                 Appointment.d_id == d_id, 
-                func.date(Appointment.start_time) == date    
-            )
+                func.date(Appointment.start_time) == date,
+                Appointment.status == 'Booked'  
+            ).first()
             if getApp:
-                return jsonify({"message": "You have scheduled appointments on this day!"})
-            Holiday = Holiday(d_id=d_id, date=date)
-            db.session.add(Holiday)
+                return jsonify({"message": "You have scheduled appointments on this day!"}), 401
+            Day = Holiday(d_id=d_id, date=date)
+            db.session.add(Day)
             db.session.commit()
-            return "Booked"
+            return "Booked", 200
         except IntegrityError as E:
             return f"Integrity Error: {E}"

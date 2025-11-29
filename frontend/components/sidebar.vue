@@ -16,7 +16,7 @@
         <h5>L'Hospital</h5>
         <ul class="nav flex-column">
             <li class="nav-item py-2" v-for="item in props.navItems">
-                <RouterLink :to="item.id ? { name: item.route, params: { id: item.id } } : { name: item.route }">{{ item.name }}</RouterLink>
+                <RouterLink :to="item.id ? { name: item.route } : { name: item.route }">{{ item.name }}</RouterLink>
             </li>
             <li class="nav-item py-2">
                 <button @click="logout" class="btn text-danger btn-link m-0 p-0">Logout</button>

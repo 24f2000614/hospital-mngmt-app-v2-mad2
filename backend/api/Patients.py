@@ -25,11 +25,11 @@ class Patient_Apis(Resource):
             return data
         else:
             try:
-                item = Patient.query.filter(Patient.p_id == p_id).first()
+                item = db.session.get(Patient, p_id)
                 data = marshal(item, patient_fields)
                 return data
-            except:
-                return jsonify("Error")
+            except Exception as e:
+                return jsonify({"message": e})
     
     def blacklist(self, p_id):
         try:

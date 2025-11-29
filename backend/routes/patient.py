@@ -47,14 +47,14 @@ def appointment_handler(a_id=None):
             result = Appointment_Apis().reschedule(new_start,a_id)
             return result
         else:
-            return "You're not authorized to reschedule appointments for this user"
+            return jsonify({"message": "You are not authorized to access this route"}), 401
     elif request.method == "DELETE":
         appointment = Appointment_Apis().get(a_id=a_id)
         if appointment.get("p_id") == p_id:
             result = Appointment_Apis().delete(a_id=a_id)
             return result
         else:
-            return "You're not authorized to cancel appointments for this user"
+            return jsonify({"message": "You are not authorized to access this route"}), 401
 
 @patient_bp.route("/search-doctor", methods=['POST'])
 @jwt_required()
@@ -117,15 +117,15 @@ def availability(d_id):
     availability = []
     for day in dates:
         slots = [[i, True] for i in range(9,23)]
-        is_free = Holiday_Apis().isAvailable(date=datetime.strptime(day, '%A %d-%m-%Y'), d_id=d_id)
-        
+        date = datetime.strptime(day, '%A %d-%m-%Y').date()
+        is_free = Holiday_Apis().isAvailable(date=date, d_id=d_id)
         item = {
             "date": day,
             "available": is_free,
             "slots": slots
         }
         if is_free:
-            appointments = Appointment_Apis().get(date=datetime.strptime(day, '%A %d-%m-%Y').date(), d_id= d_id, status='Booked')
+            appointments = Appointment_Apis().get(date=date, d_id= d_id, status='Booked')
             for slot in slots:
                 for appointment in appointments:
                     dateobj = datetime.strptime(appointment['start_time'], "%a, %d %b %Y %H:%M:%S %z")

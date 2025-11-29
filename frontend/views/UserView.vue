@@ -3,7 +3,7 @@
     import sidebar from '@/components/sidebar.vue';
     import 'bootstrap/dist/css/bootstrap.min.css';
     const router = useRouter()
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const role = localStorage.getItem('role')
     const props = defineProps({
         navItems: Array
     })
@@ -15,7 +15,7 @@
         <div class="row ">
             <sidebar :nav-items="props.navItems"></sidebar>
             <div class="col pt-4 px-5">
-                <h1>Welcome admin</h1>
+                <h1>Welcome {{role}}</h1>
                 <RouterView />
             </div>
             

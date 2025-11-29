@@ -15,7 +15,7 @@ class Prescription_Apis(Resource):
         prescriptions = Prescription.query.filter(Prescription.a_id == a_id).all()
         return [marshal(prescription, prescription_fields) for prescription in prescriptions]
         
-    def delete(self, pr_id=None):
+    def delete(self, pr_id):
         try:
             prescription = db.session.get(Prescription, pr_id)
             if prescription:
@@ -26,7 +26,10 @@ class Prescription_Apis(Resource):
                 return "No prescription found"
         except IntegrityError:
             return "Integrity Error"
-    def post(self, medicine, a_id):
-        prescription = Prescription(a_id=a_id, medicine=medicine)
-        db.session.add(prescription)
+    def post(self, prescription, a_id):
+        # print(prescription)
+        item = Prescription(a_id=a_id, medicine=prescription)
+        db.session.add(item)
         db.session.commit()
+        db.session.refresh(item)
+        return marshal(item, prescription_fields)

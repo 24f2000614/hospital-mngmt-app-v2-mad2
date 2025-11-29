@@ -25,7 +25,8 @@ const props = defineProps({
     primary: String,
     primary_fields: Array,
     secondary_fields: Array,
-    secondary: String
+    secondary: String, 
+    status: String
 })
 
 onMounted( async ()=>{
@@ -165,7 +166,7 @@ function handleError(message) {
                     <form @submit.prevent="search">
                         <input type="text" placeholder="Search" v-model="searchQ" class="form-control">
                     </form>
-                    <button v-if="searchView" class="btn btn-secondary" @click="toggleSearchView">Clear Search</button>
+                    <button v-if="searchView" class="btn btn-clear" @click="toggleSearchView">Clear Search</button>
                 </div>
                 <ul class="list-group" v-if="searchView">
                     <li v-for="item in searchResults" :key="item[getId(item)]" class="list-group-item" >
@@ -173,7 +174,7 @@ function handleError(message) {
                     </li>
                 </ul>
                 <ul class="list-group" v-else>
-                    <li v-if="secondaryData.length" v-for="item in secondaryData" class="list-group-item">
+                    <li v-for="item in secondaryData" class="list-group-item"  v-if="secondaryData.length">
                         {{ makeText(item, props.secondary_fields) }}
                     </li>
                     <span class="text-danger" v-else>

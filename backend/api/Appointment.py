@@ -133,6 +133,20 @@ class Appointment_Apis(Resource):
         if a_id and not d_id:
             appointment = db.session.get(Appointment, a_id)
             appointment.status = "Cancelled"
+            db.session.commit()
+            return "Success", 200
+        if d_id and not a_id:
+            appointments = Appointment.query.filter(Appointment.d_id == d_id).all()
+            for appointment in appointments:
+                appointment.status = "Cancelled"
+            db.session.commit()
+            return "Success", 200
+
+    def complete(self, a_id):
+            appointment = db.session.get(Appointment, a_id)
+            appointment.status = "Completed"
+            db.session.commit()
+            return "Success", 200
 
     def started(self, a_id):
         appointment = db.session.get(Appointment,a_id)
@@ -143,12 +157,9 @@ class Appointment_Apis(Resource):
         
     def diagnosis(self, a_id, diagnosis):
         appointment = db.session.get(Appointment,a_id)
-        now = datetime.now()
         if not appointment:
             return "Appointment doesnt exist"
-        if now < appointment.start_time:
-            return "The appointment is yet to start"
         appointment.diagnosis = diagnosis
-        appointment.status = "Completed"
+        # appointment.status = "Completed"
         db.session.commit()
         return "Success", 200

@@ -8,6 +8,7 @@ import WelcomeView from '../views/WelcomeView.vue'
 import UserView from '../views/UserView.vue'
 import Form from '../components/Form.vue'
 import Appointment from '../components/Appointment.vue'
+import HolidayMaker from '@/components/HolidayMaker.vue'
 
 const token = getToken()
 const router = createRouter({
@@ -40,7 +41,7 @@ const router = createRouter({
           {name:"Doctors", route:"adminDoctors"},
           {name:"Patients", route:"adminPatient"},
           {name:"Department", route:"adminDept"},
-          // {name:"Appointments", route:"adminAppointments"},
+          {name:"Appointments", route:"adminAppointments"},
         ]
       },
       children: [
@@ -73,8 +74,9 @@ const router = createRouter({
                 ],
                 submitUrl: 'admin/doctors',
                 method: 'PUT',
-                action: 'Delete'
-                },
+                action: 'Delete',
+                static: false
+              },
             },
             {
               path: "new",
@@ -92,6 +94,7 @@ const router = createRouter({
                 ],
                 submitUrl: 'admin/doctors',
                 method: 'POST',
+                static: false
                 },
             }
           ]
@@ -122,9 +125,10 @@ const router = createRouter({
                   { key: 'sex', label: 'Gender', type: 'radio', required: true, options: ['M', 'F']},
                   { key: 'address', label: 'Address', type: 'textarea', required: true},
                 ],
-                submitUrl: 'admin/patients/',
+                submitUrl: 'admin/patients',
                 method: 'PUT',
-                action: 'Blacklist'
+                action: 'Blacklist',
+                static: false
               }
             }
           ]
@@ -154,6 +158,7 @@ const router = createRouter({
                 ],
                 submitUrl: 'admin/dept',
                 method: 'PUT',
+                static:false
               }
             },
             {
@@ -167,12 +172,36 @@ const router = createRouter({
                   { key: 'description', label: 'Description', type: 'text', required: true,},
                 ],
                 submitUrl: 'admin/dept',
-                method: 'POST'
+                method: 'POST',
+                static: false
               }
             }
           ]
         },
-
+        {
+          path: '/appointments',
+          name: 'adminAppointments',
+          component: Dashboard,
+          props: {
+            heading: "Appointments",
+            endpoint: "admin/appointments",
+            formpoint: "adminAppDetails",
+            primary_fields: ['start_time', 'status'],
+          },
+          children: [
+            {
+              path: ":id",
+              name: "adminAppDetails",
+              component: Appointment,
+              props: {
+                heading: "Appointment Details",
+                isProgressive: false,
+                View: 'admin',
+                isHistorical: false
+              }
+            }
+          ]
+        }
       ]
     },
     {
@@ -184,10 +213,9 @@ const router = createRouter({
         navItems: [
           {name:"Appointments", route:"patientAppointments"},
           {name:"Department", route:"patientDept"},
-          {name: "Profile", route:"patientProfile", id: `${getUserId(token)}`},
+          {name: "Profile", route:"patientProfile"},
           {name:"Book", route:"patientBookings"},
           {name:"History", route:"patientHistory"},
-
         ]
       },
       children:[
@@ -221,7 +249,7 @@ const router = createRouter({
           ]
         },
         {
-          path: 'profile/:id',
+          path: 'profile',
           name: "patientProfile",
           component: Form,
           props:{
@@ -235,15 +263,18 @@ const router = createRouter({
               { key: 'address', label: 'Address', type: 'textarea', required: true},
             ],
             submitUrl: "patient/profile",
-            method: 'PUT'
-          }
+            method: 'PUT',
+            static: false,
+            id: getUserId(token)}
         },
         {
           path: "booking",
           name: "patientBookings",
           component: Appointment,
           props: {
-            isProgressive: true
+            heading: "Book Appointment",
+            isProgressive: true,
+            View: 'patient'
           }
         },
         {
@@ -262,7 +293,10 @@ const router = createRouter({
               name: "patientAppDetails",
               component: Appointment,
               props: {
-                isProgressive: false
+                heading: "Appointment Details",
+                isProgressive: false,
+                View: 'patient',
+                isHistorical: false
               }
             }
           ]
@@ -273,15 +307,98 @@ const router = createRouter({
           component: Dashboard,
           props: {
             heading: "History",
-            endpoint: "patient/dept",
-            formpoint: "deptDoctorList",
+            endpoint: "patient/appointments",
+            formpoint: "deptHistDetails",
             searchpoint: "patient/search-dept",
-            primary_fields: ['name', 'description']
+            primary_fields: ['start_time', 'status'],
+          },
+          children: [
+            {
+              path: ":id",
+              name: "deptHistDetails",
+              component: Appointment,
+              props: {
+                heading: "Appointment Details",
+                isProgressive: false,
+                View: 'patient',
+                isHistorical: true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      path: "/doctor",
+      name: "doctorHome",
+      meta: {requiresAuth:true, role: 'Doctor'},
+      component: UserView,
+      props: {
+        navItems: [
+          {name: "Appointments", route: "doctorAppointments"},
+          {name: "Profile", route: "doctorProfile"},
+          {name: "HolidayMaker", route: "holidayMaker"},
+        ]
+      },
+      children:[
+        {
+          path: "appointment",
+          name: "doctorAppointments",
+          component: Dashboard,
+          props: {
+            heading: "Appointments",
+            endpoint: "doctor/appointments",
+            formpoint: "doctorAppDetails",
+            primary_fields: ['start_time', 'status']
+          },
+          children: [
+            {
+              path: ":id",
+              name: "doctorAppDetails",
+              component: Appointment,
+              props: {
+                heading: "Appointment Details",
+                isProgressive: false,
+                View: 'doctor',
+                isHistorical: false
+              }
+            }
+          ]
+        },
+        {
+          path: "profile",
+          name: "doctorProfile",
+          component: Form,
+          props:{
+            heading: "Doctor Details",
+            fields: [
+              { key: 'name', label: 'Doctor Name', type: 'text', required: true},
+              { key: 'email', label: 'Email', type: 'email', required: true,},
+              { key: 'description', label: 'Description', type: 'text', required: true, },
+              { key: 'dept_id', label: 'Department', type: 'select', required: true,
+                // options: getUserRole(token) === 'Admin' ? await get('http://127.0.0.1:5000/admin/dept'): ''
+              },
+            ],
+            submitUrl: 'doctor/profile',
+            static: true,
+            id: getUserId(token)
+          }
+        },
+        {
+          path: "history/:p_id",
+          name: "docHistory",
+        },
+        {
+          path: "/holiday",
+          name: "holidayMaker",
+          component: HolidayMaker,
+          props: {
+            d_id: getUserId(token)
           }
         }
       ]
     }
-  ],
+  ]
 })
 
 router.beforeEach((to, from, next) => {

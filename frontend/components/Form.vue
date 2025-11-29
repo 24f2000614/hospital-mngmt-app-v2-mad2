@@ -7,7 +7,9 @@ const props = defineProps({
     fields: Array,
     submitUrl: String,
     method: { type: String, default: "POST" },
-    action: String
+    action: String,
+    static: Boolean,
+    id: String
 });
 
 const route = useRoute()
@@ -20,9 +22,10 @@ let initialData = null
 
 onMounted(async () => {
     try {
-        if (id){
-            initialData = await get(`http://127.0.0.1:5000/${props.submitUrl}/${id}`);
+        if (id || props.id){
+            initialData = await get(`http://127.0.0.1:5000/${props.submitUrl}/${id || props.id}`);
             Object.assign(form, initialData);
+            console.log(form)
         }
     } catch (err) {
         console.error("Failed to fetch initial data:", err);
@@ -30,7 +33,7 @@ onMounted(async () => {
     }
 });
 
-if(id) {
+if(id || props.id) {
     watch(() => route.params.id, async () => {
         initialData = await get(`http://127.0.0.1:5000/${props.submitUrl}/${route.params.id}`);
         Object.assign(form, initialData);
@@ -76,44 +79,47 @@ const handleDelete = async () => {
 
     <div v-for="field in fields" :key="field.key" class="mb-3">
 
-      <label class="form-label">{{ field.label }}</label>
+        <label class="form-label fw-bold">{{ field.label }}</label>
+        <div v-if="!props.static">
+            <input 
+                v-if="['text','password','email','number','date'].includes(field.type)"
+                v-model="form[field.key]"
+                :type="field.type"
+                class="form-control"
+                :required="field.required"
+                />
+                
+            <select 
+                v-else-if="field.type === 'select'"
+                v-model="form[field.key]"
+                class="form-select"
+                :required="field.required"
+                >
+                <option v-for="opt in field.options" :value="opt.dept_id" >
+                    {{ opt.name }}
+                </option>
+            </select>
+            
+            <textarea 
+                v-else-if="field.type === 'textarea'" 
+                v-model="form[field.key]"
+                class="form-control"
+                :required="field.required"
+            ></textarea>
 
-      <input 
-        v-if="['text','password','email','number','date'].includes(field.type)"
-        v-model="form[field.key]"
-        :type="field.type"
-        class="form-control"
-        :required="field.required"
-        />
-        
-        <select 
-        v-else-if="field.type === 'select'"
-        v-model="form[field.key]"
-        class="form-select"
-        :required="field.required"
-        >
-        <option v-for="opt in field.options" :value="opt.dept_id" >
-            {{ opt.name }}
-        </option>
-    </select>
-    
-    <textarea 
-        v-else-if="field.type === 'textarea'" 
-        v-model="form[field.key]"
-        class="form-control"
-        :required="field.required"
-      ></textarea>
+            <input v-else v-model="form[field.key]" class="form-control"/>
 
-      <input v-else v-model="form[field.key]" class="form-control"/>
-
+        </div>
+        <div v-else>
+            <li class="list-group-item">{{ form[field.key] }}</li>
+        </div>
     </div>
-
-    <button class="btn btn-primary my-1" type="submit">
-      {{ method === "POST" ? "Create" : "Update" }}
+    <button class="btn btn-primary my-1" type="submit" v-if="!staticx">
+        {{ method === "POST" ? "Create" : "Update" }}
     </button>
 
   </form>
-  <button v-if="props.action" class="btn btn-secondary my-1" @click="handleDelete">
+  <button v-if="props.action && !static" class="btn btn-secondary my-1" @click="handleDelete">
         {{ props.action }}
     </button>
 </template>

@@ -78,10 +78,7 @@ def appointment_handler(a_id=None):
             else:
                 response = []
                 appointments = Appointment_Apis().get()
-                for appointment in appointments:
-                    prescriptions = Prescription_Apis().get(a_id=appointment['a_id'])
-                    response.append({"appointment": appointment, "prescription": prescriptions})
-                return response
+                return appointments
         elif request.method == "DELETE":
             result = Appointment_Apis().cancel(a_id)
             return result
