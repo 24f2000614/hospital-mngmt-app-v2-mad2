@@ -1,0 +1,28 @@
+<h2>This Months Appointments</h2>
+{% for item in data %}
+<main>
+<div class="mb-3">
+    <label>Patient</label>
+    <li>{{ item['patient'].name }}</li>
+</div>
+<div class="mb-3">
+    <label>Patient Contact</label>
+    <li> Email : {{ item['patient'].email }}</li>
+    <li> Phone Number: {{ item['patient'].phone_no }} </li>
+</div>
+<div>
+    <label>Date: {{ item['date'] }}</label>
+</div>
+<div>
+    <label>Time Slot: {{ item['slot'] }}:00</label>
+</div>
+<template>
+    <label>Prescriptions</label>
+    {% for prescription in item['prescriptions'] %}
+    <li> 
+        {{ prescription.medicine }}
+    </li>
+    {% endfor %}
+</template>
+</main>
+{% endfor %}

@@ -1,7 +1,7 @@
 <script setup>
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { ref, onMounted, watch } from 'vue'
-import { get } from '@/utils';
+import { getUserId } from '@/auth';
 import { useRoute } from 'vue-router'
 const data = ref([])
 const primaryData = ref(null)
@@ -13,6 +13,7 @@ const searchQ = ref('');
 const searchResults = ref({})
 const searchView = ref(false)
 const token = localStorage.getItem('token')
+const p_id = getUserId(token)
 
 const emit = defineEmits(['error'])
 
@@ -27,7 +28,8 @@ const props = defineProps({
     secondary_fields: Array,
     secondary: String, 
     status: String,
-    isAid: Boolean
+    isAid: Boolean,
+    export: String
 })
 
 onMounted( async ()=>{
@@ -125,6 +127,7 @@ function handleError(message) {
         <div class="row">
             <div class="col-5" v-if="secondaryData === null">
                 <h2>{{ heading }} ({{ data.length }})</h2>
+                <a v-if="props.export" :href="`${props.export}/${p_id}`">Click Here to send history csv to mail</a>
                 <div class="d-grid my-2" v-if="props.newpoint">
                     <RouterLink :to="{ name: props.newpoint }" class="btn btn-primary">Add New</RouterLink>
                 </div>

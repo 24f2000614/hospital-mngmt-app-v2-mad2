@@ -7,7 +7,7 @@ from sqlalchemy import func
 
 holiday_fields = {
     "d_id": fields.Integer,
-    "date": fields.DateTime(dt_format='%Y-%m-%d'),
+    "date": fields.DateTime(dt_format='iso8601'),
 }
 
 class Holiday_Apis(Resource):

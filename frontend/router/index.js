@@ -308,6 +308,7 @@ const router = createRouter({
             formpoint: "deptHistDetails",
             searchpoint: "patient/search-dept",
             primary_fields: ['start_time', 'status'],
+            export: 'http://127.0.0.1:5000/report/gen_report/'
           },
           children: [
             {
