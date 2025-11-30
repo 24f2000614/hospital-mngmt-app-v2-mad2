@@ -11,7 +11,6 @@ from time import sleep
 @jwt_required()
 @cache.cached(timeout=20, key_prefix='patients')
 def patient_handler(p_id=None):
-    sleep(10)
     claims=get_jwt()
     print('Fetching from db...')
     if claims['role'] == "Admin":

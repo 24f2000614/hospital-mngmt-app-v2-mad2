@@ -264,9 +264,9 @@ if (props.isProgressive){
       <div class="mb-3" v-if="!isProgressive && View =='doctor'">
         <label class="form-label fw-bold">Patient</label>
         <li class="list-group-item"> 
-        <RouterLink :to="{name:'patientOnlyHistory', params: {id: form.p_id}}">
+        <a :href="`http://localhost:5173/doctor/history/${form.p_id}`">
           {{ userItems.name }}
-        </RouterLink>
+        </a>
         </li>
       </div>
 

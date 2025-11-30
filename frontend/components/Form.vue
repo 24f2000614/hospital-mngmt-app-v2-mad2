@@ -41,7 +41,7 @@ if(id || props.id) {
 
 
 const handleSubmit = async () => {
-    const url = id ? `http://127.0.0.1:5000/${props.submitUrl}/${route.params.id}` : `http://127.0.0.1:5000/${props.submitUrl}`;
+    const url = (id || props.id) ? `http://127.0.0.1:5000/${props.submitUrl}/${route.params.id || props.id}` : `http://127.0.0.1:5000/${props.submitUrl}`;
     await fetch(url, {
         method: props.method,
         headers: {
@@ -113,7 +113,7 @@ const handleDelete = async () => {
             <li class="list-group-item">{{ form[field.key] }}</li>
         </div>
     </div>
-    <button class="btn btn-primary my-1" type="submit" v-if="!staticx">
+    <button class="btn btn-primary my-1" type="submit" v-if="!static">
         {{ method === "POST" ? "Create" : "Update" }}
     </button>
 
