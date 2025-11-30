@@ -1,15 +1,19 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from flask_cors import cross_origin
+from cache import cache
 from api import Patient_Apis, Doctor_Apis, Appointment_Apis, Department_Apis, Prescription_Apis, Blacklist_Apis
-
 admin_bp = Blueprint("admin",__name__)
+from time import sleep
 
 @admin_bp.route("/patients")
 @admin_bp.route("/patients/<int:p_id>", methods = ["GET", "DELETE", "PUT"])
 @jwt_required()
+@cache.cached(timeout=20, key_prefix='patients')
 def patient_handler(p_id=None):
+    sleep(10)
     claims=get_jwt()
+    print('Fetching from db...')
     if claims['role'] == "Admin":
         if request.method == "GET":
             data = Patient_Apis().get(p_id)

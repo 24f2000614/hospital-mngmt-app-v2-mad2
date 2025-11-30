@@ -4,14 +4,18 @@ from routes import auth_bp, admin_bp, patient_bp, doctor_bp
 from flask_jwt_extended import JWTManager, verify_jwt_in_request
 from models import db, Admin, Patient, Doctor, Department
 from flask_cors import CORS
+from cache import cache
 from datetime import timedelta
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///Lhospital.sqlite3"
 app.config['JWT_SECRET_KEY'] = "BuffaloWings"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=100)
-jwt = JWTManager(app)
+app.config['CACHE_TYPE'] = 'RedisCache'
+app.config['CACHE_REDIS_URL'] = 'redis://localhost:6379/0'
 
+cache.init_app(app)
+jwt = JWTManager(app)
 db.init_app(app)
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
