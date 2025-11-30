@@ -1,7 +1,9 @@
 from flask import jsonify
 from flask_restful import Resource, fields, marshal
 from models import db, Patient, Blacklist
-from .Appointment import Appointment_Apis, Prescription_Apis
+from .Appointment import Appointment_Apis
+from .Prescription import Prescription_Apis
+from .Doctors import Doctor_Apis
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import load_only
@@ -63,7 +65,7 @@ class Patient_Apis(Resource):
                 ).limit(5).all()
             return [marshal(search_item, patient_fields) for search_item in search_by_name]
 
-    def history(self, p_id):
+    def history(self, p_id = None, a_id = None):
         history = {}
         appointments = Appointment_Apis().get(p_id=p_id, status='Completed')
         for appointment in appointments:

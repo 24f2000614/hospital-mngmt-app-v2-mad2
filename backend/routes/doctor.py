@@ -17,8 +17,8 @@ def appointment_handler(a_id = None):
             appointments = Appointment_Apis().get(d_id=d_id)
             return appointments
         else: 
-            appointment = Appointment_Apis().get(a_id=a_id)
-            if appointment.get("d_id")!= d_id:
+            appointment = dict(Appointment_Apis().get(a_id=a_id))
+            if appointment["d_id"]!= d_id:
                 return jsonify({"message":"You are not authorized to access this route"}),403
             prescriptions = Prescription_Apis().get(a_id=a_id)
             return jsonify({"appointment": appointment, "prescriptions": prescriptions})
@@ -40,11 +40,12 @@ def appointment_handler(a_id = None):
 @jwt_required()
 def history_handler(p_id):
     claims = get_jwt()
+    d_id = get_jwt_identity()
     if claims['role'] != "Doctor":
         return jsonify({"message":"You are not authorized to access this route"}),403
-    
-    history = Patient_Apis().history(p_id)
-    return history
+    appointments = Appointment_Apis().get(p_id=p_id)
+    patient = Patient_Apis().get(p_id=p_id)
+    return jsonify({"patient": patient, "appointments": appointments})
 
 @doctor_bp.route('/holiday/<int:d_id>', methods = ['GET', 'POST'])
 @jwt_required()

@@ -16,7 +16,6 @@ class Holiday_Apis(Resource):
         return [marshal(holiday, holiday_fields) for holiday in Holidays]
 
     def isAvailable(self, date, d_id):
-        # print(type(date), d_id)
         HolidayMatch = Holiday.query.filter(
             Holiday.d_id == d_id,
             Holiday.date == date

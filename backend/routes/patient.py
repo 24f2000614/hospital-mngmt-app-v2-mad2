@@ -22,7 +22,7 @@ patient_bp = Blueprint("patient", __name__)
 def appointment_handler(a_id=None):
     claims= get_jwt()
     if claims['role'] != "Patient":
-        return jsonify({"message": "You are not authorized to access this route"})
+        return jsonify({"message": "You are not authorized to access this route"}), 403
     p_id = int(get_jwt_identity())
 
     if request.method == 'GET':

@@ -9,6 +9,7 @@ import UserView from '../views/UserView.vue'
 import Form from '../components/Form.vue'
 import Appointment from '../components/Appointment.vue'
 import HolidayMaker from '@/components/HolidayMaker.vue'
+import HistoryViewer from '@/components/HistoryViewer.vue'
 
 const token = getToken()
 const router = createRouter({
@@ -69,7 +70,7 @@ const router = createRouter({
                   { key: 'email', label: 'Email', type: 'email', required: true,},
                   { key: 'description', label: 'Description', type: 'text', required: true, },
                   { key: 'dept_id', label: 'Department', type: 'select', required: true,
-                    options: getUserRole(token) === 'Admin' ? await get('http://127.0.0.1:5000/admin/dept'): ''
+                    options: await get('http://127.0.0.1:5000/admin/dept')
                   },
                 ],
                 submitUrl: 'admin/doctors',
@@ -179,11 +180,11 @@ const router = createRouter({
           ]
         },
         {
-          path: '/appointments',
+          path: 'appointments',
           name: 'adminAppointments',
           component: Dashboard,
           props: {
-            heading: "Appointments",
+            heading: "All Appointments",
             endpoint: "admin/appointments",
             formpoint: "adminAppDetails",
             primary_fields: ['start_time', 'status'],
@@ -192,12 +193,8 @@ const router = createRouter({
             {
               path: ":id",
               name: "adminAppDetails",
-              component: Appointment,
+              component: HistoryViewer,
               props: {
-                heading: "Appointment Details",
-                isProgressive: false,
-                View: 'admin',
-                isHistorical: false
               }
             }
           ]
@@ -243,7 +240,7 @@ const router = createRouter({
                 primary: "dept",
                 primary_fields: ['name', 'description'],
                 secondary: "doctor_list",
-                secondary_fields: ['name', 'description'],
+                secondary_fields: ['name', 'description', 'email'],
               }
             }
           ]
@@ -316,13 +313,7 @@ const router = createRouter({
             {
               path: ":id",
               name: "deptHistDetails",
-              component: Appointment,
-              props: {
-                heading: "Appointment Details",
-                isProgressive: false,
-                View: 'patient',
-                isHistorical: true
-              }
+              component: HistoryViewer,
             }
           ]
         }
@@ -338,6 +329,7 @@ const router = createRouter({
           {name: "Appointments", route: "doctorAppointments"},
           {name: "Profile", route: "doctorProfile"},
           {name: "HolidayMaker", route: "holidayMaker"},
+          // {name: "History", route: "patientDocHistory"},
         ]
       },
       children:[
@@ -385,8 +377,29 @@ const router = createRouter({
           }
         },
         {
-          path: "history/:p_id",
-          name: "docHistory",
+          path: 'history/:id',
+          name: 'patientOnlyHistory',
+          component: Dashboard,
+          props: route => ({
+            heading: "History",
+            endpoint: `doctor/history`,
+            formpoint: "DocAppDetails",
+            primary: "patient",
+            primary_fields: ['name', 'email'],
+            secondary: "appointments",
+            secondary_fields: ['start_time', 'status'],
+            isAid: true
+          }),
+          children: [
+            {
+              path: ":a_id",
+              name: "DocAppDetails",
+              component: HistoryViewer,
+              props:{
+                heading: "Appointment Details"
+              }
+            }
+          ]
         },
         {
           path: "/holiday",

@@ -15,7 +15,7 @@ def login():
         return jsonify({"message":"Invalid Input"})
             
     if db.session.get(Blacklist, email):
-        return "This email is blacklisted"
+        return jsonify({"message":"This email is blacklisted"})
 
     user = None
     id = None
@@ -73,7 +73,7 @@ def register():
         return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
 
     if db.session.get(Blacklist, email):
-        return "This email is blacklisted"
+        return jsonify({"error": "This email is black listed!"}), 409
 
     if Patient.query.filter_by(phone_no=phone_no).first():
         return jsonify({"error": "Phone number is already registered"}), 409
@@ -82,7 +82,7 @@ def register():
         return jsonify({"error": "Email is already registered"}), 409
 
     if len(phone_no) != 10:
-        return jsonify({"error": "Phone number is not ten digits"})
+        return jsonify({"error": "Phone number is not ten digits"}), 409
 
     try:
         new_user=Patient(email=email,password=generate_password_hash(password),phone_no=phone_no,name=name, dob=dob, sex=sex)

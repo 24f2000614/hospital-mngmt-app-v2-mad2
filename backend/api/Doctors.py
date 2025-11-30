@@ -1,6 +1,6 @@
 from flask import jsonify
 from flask_restful import Resource, fields, marshal
-from models import db, Doctor
+from models import db, Doctor, Patient
 from werkzeug.security import generate_password_hash
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +12,16 @@ doctor_fields = {
     "email": fields.String,
     "description": fields.String,
     "dept_id": fields.Integer,
+}
+
+patient_fields = {
+    "p_id": fields.Integer,
+    "name": fields.String,
+    "email": fields.String,
+    "sex": fields.String,
+    "phone_no": fields.String,
+    "address": fields.String,
+    "dob": fields.String
 }
 
 class Doctor_Apis(Resource):
@@ -89,3 +99,16 @@ class Doctor_Apis(Resource):
             results = Doctor.query.filter(Doctor.name.ilike(f"%{searchQ}%"), Doctor.dept_id == d_id).limit(5).all()
 
         return [marshal(search_item, doctor_fields) for search_item in results]
+
+    def patient_lst(self, d_id):
+        appointments = Appointment_Apis().get(d_id=d_id)
+        p_id_list = set()
+        for appointment in appointments:
+            p_id_list.add(appointment['p_id'])
+        response = []
+        for p_id in p_id_list:
+            item = {}
+            db_item = db.session.get(Patient, p_id)
+            patient = marshal(db_item, patient_fields)
+            response.append(patient)
+        return response

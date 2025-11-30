@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, onMounted, watch } from "vue";
+import { reactive, onMounted, watch, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { get } from "@/utils";
 const props = defineProps({
@@ -11,7 +11,7 @@ const props = defineProps({
     static: Boolean,
     id: String
 });
-
+const dropdownOptions = ref([])
 const route = useRoute()
 const router = useRouter()
 const emit = defineEmits(['refresh', 'error'])
@@ -25,7 +25,6 @@ onMounted(async () => {
         if (id || props.id){
             initialData = await get(`http://127.0.0.1:5000/${props.submitUrl}/${id || props.id}`);
             Object.assign(form, initialData);
-            console.log(form)
         }
     } catch (err) {
         console.error("Failed to fetch initial data:", err);

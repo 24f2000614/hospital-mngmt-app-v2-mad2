@@ -27,7 +27,6 @@ class Prescription_Apis(Resource):
         except IntegrityError:
             return "Integrity Error"
     def post(self, prescription, a_id):
-        # print(prescription)
         item = Prescription(a_id=a_id, medicine=prescription)
         db.session.add(item)
         db.session.commit()

@@ -1,7 +1,7 @@
 <script setup>
 import { get } from '../utils'
 import { getToken } from '@/auth'
-import { onMounted, reactive, ref, watch, computed, onBeforeMount } from 'vue'
+import { onMounted, reactive, ref, watch, computed } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 const depts = ref([])
@@ -22,7 +22,8 @@ const props = defineProps({
   heading: String,
   isProgressive: Boolean,
   View: String,
-  isHistorical: Boolean
+  isHistorical: Boolean,
+  user: String
 })
 
 const form = reactive({
@@ -149,12 +150,10 @@ const addMed = async () => {
 }
 
 const remMed = async(pr_id) => {
-  // Find the item in the ref array
   const item = prescriptions.value.find(p => p.pr_id === pr_id)
 
-  if (!item) return  // If not found, do nothing
+  if (!item) return 
 
-  // If the item exists in the form.prescriptions, delete it from the backend first
   if (form.prescriptions.some(p => p.pr_id === item.pr_id)) {
     try {
       await fetch(`http://127.0.0.1:5000/doctor/prescription/${item.pr_id}`, {
@@ -220,12 +219,10 @@ if (props.isProgressive){
         form.dept_id = doc.dept_id
       } else if (props.View == 'doctor') {
         const p_id = initialData.value.appointment.p_id
-        console.log(initialData)
         const patient = await get(`http://127.0.0.1:5000/doctor/patient-info/${p_id}`)
         userItems.value = {"name":patient.name, "email": patient.email, "phone_no": patient.phone_no}
         Object.assign(form, initialData.value.appointment)
         form.prescriptions = initialData.value.prescriptions
-        console.log(form)
         const dateObj = new Date(form.start_time)
         form.start_time = dateObj.getUTCHours()
         form.date = `${days[dateObj.getDay()]} ${dateObj.getUTCDate()}-${dateObj.getMonth()+1}-${dateObj.getFullYear()}`
@@ -267,7 +264,7 @@ if (props.isProgressive){
       <div class="mb-3" v-if="!isProgressive && View =='doctor'">
         <label class="form-label fw-bold">Patient</label>
         <li class="list-group-item"> 
-        <RouterLink :to="`/doctor/history/${form.p_id}`">
+        <RouterLink :to="{name:'patientOnlyHistory', params: {id: form.p_id}}">
           {{ userItems.name }}
         </RouterLink>
         </li>
@@ -290,7 +287,7 @@ if (props.isProgressive){
         <label class="form-label fw-bold">Date: {{ form['date'] }}</label>
       </div>
       
-      <div class="mb-3" v-if="showSlot && View == 'patient' && !isHistorical">
+      <div class="mb-3" v-if="showSlot && View == 'patient' && !isHistorical && form['status'] == 'Booked'">
         <label class="form-label fw-bold">Time Slot</label>
         <select name="slot" id="slot" class="form-select" v-model="form.start_time">
           <option v-if="!form.date" disabled value="">Select a date first</option>
@@ -298,7 +295,7 @@ if (props.isProgressive){
         </select>
       </div>
 
-      <div v-if="!isProgressive && View =='doctor' || isHistorical">
+      <div v-if="!isProgressive && View =='doctor' || isHistorical || form['status'] == 'Completed'">
         <label class="form-label fw-bold">Time Slot {{ form.start_time }}:00</label>
       </div>
 

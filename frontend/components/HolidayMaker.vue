@@ -11,7 +11,6 @@
     const holidayToBe = ref(null)
     onMounted(async ()=>{
         dates.value = await get(`http://127.0.0.1:5000/patient/doc-availability/${props.d_id}`)
-        console.log(dates)
         for (const item of dates.value){
             let holidayBool = true
             if(!item.available) {

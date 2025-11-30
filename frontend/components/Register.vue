@@ -19,13 +19,12 @@ const registerUser = async () => {
       },
       body: JSON.stringify(registrationForm)
     })
+    const data = await response.json()
     if(!response.ok) {
-      const error = await response.json()
-      throw new Error(JSON.stringify(error.error));
+      alert(data.error || 'Registration failed');
+      return 
     }
-    else {
-      alert("Successfully Registered")
-    }
+    alert("Successfully Registered")
   } catch (error) {
     alert(`${error}`)
   }

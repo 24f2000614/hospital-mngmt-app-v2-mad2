@@ -29,15 +29,14 @@ def patient_handler(p_id=None):
                 return "Missing patient id"
     return jsonify({"message": "You are not authorized to access this route"}), 403
 
-@admin_bp.route("/history/<int:p_id>")
+@admin_bp.route("/history/<int:a_id>")
 @jwt_required()
-def history_handler(p_id):
-    claims = get_jwt()
-    if claims['role'] == "Admin":
-        history = Patient_Apis().history(p_id)
-        return history
-    else: 
-        return jsonify({"message": "You are not authorized to access this route"}), 403
+def history_handler(a_id):
+    appointment = dict(Appointment_Apis().get(a_id=a_id))
+    prescriptions = Prescription_Apis().get(a_id=a_id)
+    patient = Patient_Apis().get(p_id=appointment['p_id'])
+    doctor = Doctor_Apis().get(d_id=appointment['d_id'])
+    return jsonify({"appointment": appointment, "prescriptions": prescriptions, "doctor": doctor, "patient": patient})
 
 @admin_bp.route("/doctors", methods=['GET','POST'])
 @admin_bp.route("/doctors/<int:d_id>", methods=['GET','PUT','DELETE'])
@@ -73,10 +72,8 @@ def appointment_handler(a_id=None):
         if request.method == "GET":
             if a_id:
                 appointment = Appointment_Apis().get(a_id=a_id)
-                prescriptions = Prescription_Apis().get(a_id=a_id)
                 return appointment
             else:
-                response = []
                 appointments = Appointment_Apis().get()
                 return appointments
         elif request.method == "DELETE":
@@ -108,14 +105,13 @@ def search_handler(srch_type):
 @admin_bp.route("/dept/<int:dept_id>", methods=['GET', 'PUT', 'DELETE'])
 @jwt_required()
 def department_handler(dept_id = None):
-    claims = get_jwt()
-    if claims['role'] != "Admin":
-        return jsonify({"message":"You are not authorized to access this route"}),403
-    
+    claims = get_jwt()    
     if request.method == 'GET':
         dept = Department_Apis().get(dept_id)
         return dept
-    elif request.method == 'POST':
+    if claims['role'] != "Admin":
+        return jsonify({"message":"You are not authorized to access this route"}),403
+    if request.method == 'POST':
         data = request.json
         result = Department_Apis().post(data)
         return result

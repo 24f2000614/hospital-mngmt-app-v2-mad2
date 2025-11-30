@@ -26,7 +26,8 @@ const props = defineProps({
     primary_fields: Array,
     secondary_fields: Array,
     secondary: String, 
-    status: String
+    status: String,
+    isAid: Boolean
 })
 
 onMounted( async ()=>{
@@ -35,6 +36,7 @@ onMounted( async ()=>{
 
 const fetchData = async () => {
     try{
+    if(!id){
     const reqMain = await fetch(`http://127.0.0.1:5000/${props.endpoint}`, {
             headers: {
                 "Content-Type": "application/json",
@@ -42,7 +44,7 @@ const fetchData = async () => {
             }
         })
         data.value = await reqMain.json()
-        if (id) {
+    }else{
             const reqSub = await fetch(`http://127.0.0.1:5000/${props.endpoint}/${id}`, {
                 headers: {
                     "Content-Type": "application/json",
@@ -52,10 +54,7 @@ const fetchData = async () => {
             const res = await reqSub.json()
             primaryData.value = res[props.primary] || null
             secondaryData.value = res[props.secondary] || null
-        } else {
-            primaryData.value = null
-            secondaryData.value = null
-        }
+        } 
     } catch(err){
         error.value = err.message
     }
@@ -89,9 +88,7 @@ const search = async () => {
             searchResults.value = res
         }
         searchView.value= true
-        // console.log(searchView.value)
     }catch (err) {
-        console.log(err.message)
         error.value = err.message
     }
 
@@ -128,7 +125,7 @@ function handleError(message) {
         <div class="row">
             <div class="col-5" v-if="secondaryData === null">
                 <h2>{{ heading }} ({{ data.length }})</h2>
-                <div class="d-grid my-2" v-if="heading != `Patients` && heading != `Appointments`">
+                <div class="d-grid my-2" v-if="props.newpoint">
                     <RouterLink :to="{ name: props.newpoint }" class="btn btn-primary">Add New</RouterLink>
                 </div>
                 
@@ -162,7 +159,7 @@ function handleError(message) {
                     <h5>{{ makeText(primaryData, props.primary_fields) }}</h5>
                 </div>
                 
-                <div class="d-grid my-2">
+                <div class="d-grid my-2" v-if="props.searchpoint">
                     <form @submit.prevent="search">
                         <input type="text" placeholder="Search" v-model="searchQ" class="form-control">
                     </form>
@@ -174,12 +171,15 @@ function handleError(message) {
                     </li>
                 </ul>
                 <ul class="list-group" v-else>
-                    <li v-for="item in secondaryData" class="list-group-item"  v-if="secondaryData.length">
+                    <li v-for="item in secondaryData" class="list-group-item"  v-if="secondaryData.length && !formpoint">
                         {{ makeText(item, props.secondary_fields) }}
                     </li>
-                    <span class="text-danger" v-else>
-                        No items
-                    </span>
+                        <li v-for="item in secondaryData" class="list-group-item"  v-if="secondaryData.length && formpoint && !isAid">
+                        <RouterLink :to = "{name: `${props.formpoint}`, params: {id : getId(item)}}">{{ makeText(item, props.secondary_fields) }}</RouterLink>
+                    </li>
+                    <li v-for="item in secondaryData" class="list-group-item"  v-if="secondaryData.length && formpoint && isAid">
+                        <RouterLink :to = "{name: `${props.formpoint}`, params: {id, a_id : getId(item)}}">{{ makeText(item, props.secondary_fields) }}</RouterLink>
+                    </li>
                 </ul>
             </div>
             <div class="col-7">
