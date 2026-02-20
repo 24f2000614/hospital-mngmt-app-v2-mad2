@@ -1,0 +1,26 @@
+name: CI with Cache
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Prime cache
+      # This 'id' is mandatory so the next step can find it
+      id: prime-cache-c08cb88 
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm
+        key: cache-c08cb88
+    
+    - name: Show cache result
+      # This step name matches your assignment requirement
+      run: 'echo "Cache restored: ${{ steps.prime-cache-c08cb88.outputs.cache-hit }}"'
+    
+    - name: Install dependencies
+      run: npm ci
